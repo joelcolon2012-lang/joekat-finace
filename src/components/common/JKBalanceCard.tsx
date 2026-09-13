@@ -1,4 +1,4 @@
-﻿// =====================================================================
+// =====================================================================
 // COMPONENTE JKBalanceCard - FINTECH GLASSMORPHISM HERO
 // Encabezado JOEKAT, Balance Disponible, Comparativa % y 4 Indicadores
 // =====================================================================
@@ -8,6 +8,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '../../theme/designTokens';
 import { formatCurrency } from '../../utils/currency';
 import { Spacing } from '../../theme/spacing';
+
+import { useThemeStore } from '../../store/themeStore';
 
 interface JKBalanceCardProps {
   greeting?: string;
@@ -36,6 +38,8 @@ export const JKBalanceCard: React.FC<JKBalanceCardProps> = ({
   isComparisonPositive = true,
   onPressPeriod,
 }) => {
+  const { isDarkMode } = useThemeStore();
+
   // Cálculo de tasa de ahorro si no viene provista
   const calculatedSavingsRate =
     savingsRate !== undefined
@@ -49,7 +53,7 @@ export const JKBalanceCard: React.FC<JKBalanceCardProps> = ({
       {/* Encabezado Fintech: JOEKAT y selector de mes */}
       <View style={styles.topBrandRow}>
         <View>
-          <Text style={styles.brandTitle}>JOEKAT</Text>
+          <Text style={[styles.brandTitle, !isDarkMode && { color: '#071827' }]}>JOEKAT</Text>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={onPressPeriod}
@@ -66,10 +70,11 @@ export const JKBalanceCard: React.FC<JKBalanceCardProps> = ({
         </View>
       </View>
 
-      {/* Tarjeta Hero Glassmorphic */}
+      {/* Tarjeta Hero Glassmorphic / Dark Navy */}
       <View
         style={[
           styles.heroCard,
+          !isDarkMode && styles.heroCardLight,
           Platform.OS === 'web' ? ({
             backdropFilter: 'blur(20px)',
             WebkitBackdropFilter: 'blur(20px)',
@@ -231,6 +236,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.28,
     shadowRadius: 28,
+    elevation: 6,
+  },
+  heroCardLight: {
+    backgroundColor: '#071827',
+    borderColor: 'rgba(20, 184, 166, 0.25)',
+    shadowColor: '#0F766E',
+    shadowOpacity: 0.15,
+    shadowRadius: 24,
     elevation: 6,
   },
   balanceHeader: {

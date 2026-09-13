@@ -1,4 +1,4 @@
-﻿// =====================================================================
+// =====================================================================
 // DESIGN TOKENS - JOEKAT FINANCE FINTECH PREMIUM
 // Paleta: Verde profundo, Verde financiero, Azul oscuro, Marfil, Glassmorphism
 // =====================================================================
@@ -10,17 +10,24 @@ export const Colors = {
   darkNavy: '#071827',          // Azul oscuro principal (fondos, estructura, navegación)
   secondaryNavy: '#102A43',     // Azul secundario (superficies, tarjetas oscuras)
   accentNavy: '#1E3A5F',        // Azul medio para bordes activos y detalles
-  ivoryWhite: '#F8F5EC',        // Blanco marfil (textos principales, áreas claras)
-  ivoryTranslucent: 'rgba(248, 245, 236, 0.75)', // Subtítulos y microinfo
-  ivoryMuted: 'rgba(248, 245, 236, 0.50)',       // Textos tenues
+  ivoryWhite: '#F8F5EC',        // Blanco marfil
+  ivoryTranslucent: 'rgba(248, 245, 236, 0.75)',
+  ivoryMuted: 'rgba(248, 245, 236, 0.50)',
+  pureWhite: '#FFFFFF',
+  textNavy: '#071827',          // Texto oscuro principal en fondo blanco
+  textSlate: '#334155',         // Texto secundario en fondo blanco
+  textMutedLight: '#64748B',    // Texto tenue
 
-  // Glassmorphism & Transparencias
-  glassBg: 'rgba(255, 255, 255, 0.08)',
-  glassBgStrong: 'rgba(255, 255, 255, 0.12)',
-  glassBgSubtle: 'rgba(255, 255, 255, 0.04)',
-  glassBorder: 'rgba(255, 255, 255, 0.12)',
-  glassBorderStrong: 'rgba(255, 255, 255, 0.20)',
-  navGlassBg: 'rgba(7, 24, 39, 0.88)',
+  // Glassmorphism & Transparencias para menús y tarjetas
+  glassBg: 'rgba(255, 255, 255, 0.88)',
+  glassBgDark: 'rgba(7, 24, 39, 0.88)',
+  glassBgStrong: 'rgba(255, 255, 255, 0.95)',
+  glassBgSubtle: 'rgba(255, 255, 255, 0.70)',
+  glassBorder: 'rgba(0, 0, 0, 0.08)',
+  glassBorderDark: 'rgba(255, 255, 255, 0.12)',
+  glassBorderStrong: 'rgba(0, 0, 0, 0.14)',
+  navGlassBg: 'rgba(255, 255, 255, 0.88)', // Barra de navegación con transparencia y blur
+  menuGlassBg: 'rgba(255, 255, 255, 0.92)', // Menús flotantes y contextuales con transparencia
 
   // Estados semánticos
   income: '#14B8A6',

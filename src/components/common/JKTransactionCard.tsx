@@ -5,6 +5,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeStore } from '../../store/themeStore';
 import { Transaction, Category } from '../../types';
 import { Colors, Radius } from '../../theme/designTokens';
 import { formatCurrency } from '../../utils/currency';
@@ -29,6 +30,7 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
   onDuplicate,
   onLongPress,
 }) => {
+  const { isDarkMode } = useThemeStore();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const isIncome = transaction.type === 'income';
@@ -67,6 +69,7 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
         onPress={onPress || onEdit}
         style={[
           styles.card,
+          !isDarkMode && styles.cardLight,
           Platform.OS === 'web' ? ({
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
@@ -74,19 +77,23 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
         ]}
       >
         {/* Icono de Categoría */}
-        <View style={styles.iconCircle}>
-          <Ionicons name={iconName} size={18} color={isIncome ? Colors.secondaryGreen : Colors.ivoryWhite} />
+        <View style={[styles.iconCircle, !isDarkMode && { backgroundColor: 'rgba(15, 118, 110, 0.08)' }]}>
+          <Ionicons
+            name={iconName}
+            size={18}
+            color={isIncome ? Colors.secondaryGreen : isDarkMode ? Colors.ivoryWhite : Colors.primaryGreen}
+          />
         </View>
 
         {/* Concepto y Metadatos */}
         <View style={styles.infoCol}>
-          <Text style={styles.descriptionText} numberOfLines={1}>
+          <Text style={[styles.descriptionText, !isDarkMode && { color: '#071827' }]} numberOfLines={1}>
             {transaction.description || categoryName}
           </Text>
           <View style={styles.metaRow}>
             <Text style={styles.categoryBadge}>{categoryName}</Text>
-            <Text style={styles.dotSeparator}>•</Text>
-            <Text style={styles.dateText}>{formatDateSpanish(transaction.date)}</Text>
+            <Text style={[styles.dotSeparator, !isDarkMode && { color: '#94A3B8' }]}>•</Text>
+            <Text style={[styles.dateText, !isDarkMode && { color: '#64748B' }]}>{formatDateSpanish(transaction.date)}</Text>
           </View>
 
           {/* Badge de Responsable */}
@@ -96,16 +103,16 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
                 styles.ownerPill,
                 isKath && styles.ownerPillKath,
                 isJoel && styles.ownerPillJoel,
-                !isKath && !isJoel && styles.ownerPillShared,
+                !isKath && !isJoel && (isDarkMode ? styles.ownerPillShared : styles.ownerPillSharedLight),
               ]}
             >
               <Ionicons
                 name={isKath ? 'sparkles' : isJoel ? 'person' : 'people'}
                 size={11}
-                color={Colors.ivoryWhite}
+                color={!isDarkMode && !isKath && !isJoel ? '#0F766E' : Colors.ivoryWhite}
                 style={{ marginRight: 4 }}
               />
-              <Text style={styles.ownerText}>{ownerLabel}</Text>
+              <Text style={[styles.ownerText, !isDarkMode && !isKath && !isJoel && { color: '#0F766E' }]}>{ownerLabel}</Text>
             </View>
           </View>
         </View>
@@ -122,12 +129,12 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
             style={styles.moreBtn}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Ionicons name="ellipsis-horizontal" size={16} color={Colors.ivoryTranslucent} />
+            <Ionicons name="ellipsis-horizontal" size={16} color={!isDarkMode ? '#64748B' : Colors.ivoryTranslucent} />
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
 
-      {/* Menú de Acciones Rápidas (Editar / Duplicar / Eliminar) */}
+      {/* Menú de Acciones Rápidas (Transparente con blur) */}
       {menuOpen ? (
         <View style={styles.actionMenuRow}>
           {onEdit ? (
@@ -137,10 +144,17 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
                 setMenuOpen(false);
                 onEdit();
               }}
-              style={styles.menuItem}
+              style={[
+                styles.menuItem,
+                !isDarkMode && styles.menuItemLight,
+                Platform.OS === 'web' ? ({
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                } as any) : null,
+              ]}
             >
               <Ionicons name="create-outline" size={14} color={Colors.secondaryGreen} />
-              <Text style={[styles.menuItemText, { color: Colors.secondaryGreen }]}>Editar</Text>
+              <Text style={[styles.menuItemText, !isDarkMode && { color: '#071827' }]}>Editar</Text>
             </TouchableOpacity>
           ) : null}
 
@@ -151,10 +165,17 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
                 setMenuOpen(false);
                 onDuplicate();
               }}
-              style={styles.menuItem}
+              style={[
+                styles.menuItem,
+                !isDarkMode && styles.menuItemLight,
+                Platform.OS === 'web' ? ({
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                } as any) : null,
+              ]}
             >
               <Ionicons name="copy-outline" size={14} color={Colors.transfer} />
-              <Text style={[styles.menuItemText, { color: Colors.transfer }]}>Duplicar</Text>
+              <Text style={[styles.menuItemText, !isDarkMode && { color: '#071827' }]}>Duplicar</Text>
             </TouchableOpacity>
           ) : null}
 
@@ -165,10 +186,17 @@ export const JKTransactionCard: React.FC<JKTransactionCardProps> = ({
                 setMenuOpen(false);
                 onDelete();
               }}
-              style={styles.menuItem}
+              style={[
+                styles.menuItem,
+                !isDarkMode && styles.menuItemLight,
+                Platform.OS === 'web' ? ({
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                } as any) : null,
+              ]}
             >
-              <Ionicons name="trash-outline" size={14} color="#F87171" />
-              <Text style={[styles.menuItemText, { color: '#F87171' }]}>Eliminar</Text>
+              <Ionicons name="trash-outline" size={14} color="#EF4444" />
+              <Text style={[styles.menuItemText, { color: '#EF4444' }]}>Eliminar</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -194,6 +222,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 12,
     elevation: 2,
+  },
+  cardLight: {
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  ownerPillSharedLight: {
+    backgroundColor: 'rgba(15, 118, 110, 0.1)',
   },
   iconCircle: {
     width: 40,
@@ -285,6 +325,15 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  menuItemLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.92)',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+    elevation: 2,
   },
   menuItemText: {
     fontSize: 11,

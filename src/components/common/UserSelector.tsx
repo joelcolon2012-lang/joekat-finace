@@ -1,7 +1,9 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Radius } from '../../theme/designTokens';
+
+import { useThemeStore } from '../../store/themeStore';
 
 export type FinancialScope = 'all' | 'joel' | 'kath' | 'shared';
 
@@ -16,6 +18,8 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
   onSelect,
   style,
 }) => {
+  const { isDarkMode } = useThemeStore();
+
   const options: { id: FinancialScope; label: string; icon: string }[] = [
     { id: 'all', label: 'COMPARTIDO', icon: 'people' },
     { id: 'joel', label: 'JOEL', icon: 'person' },
@@ -26,6 +30,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     <View
       style={[
         styles.container,
+        !isDarkMode && styles.containerLight,
         Platform.OS === 'web' ? ({
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
@@ -35,6 +40,7 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
     >
       {options.map((opt) => {
         const isActive = selected === opt.id;
+        const inactiveColor = isDarkMode ? 'rgba(248, 245, 236, 0.65)' : '#475569';
         return (
           <TouchableOpacity
             key={opt.id}
@@ -50,13 +56,13 @@ export const UserSelector: React.FC<UserSelectorProps> = ({
             <Ionicons
               name={opt.icon as any}
               size={14}
-              color={isActive ? Colors.ivoryWhite : 'rgba(248, 245, 236, 0.65)'}
+              color={isActive ? '#FFFFFF' : inactiveColor}
               style={{ marginRight: 6 }}
             />
             <Text
               style={[
                 styles.label,
-                isActive ? styles.activeLabel : styles.inactiveLabel,
+                isActive ? styles.activeLabel : [styles.inactiveLabel, !isDarkMode && { color: '#475569' }],
               ]}
             >
               {opt.label}
@@ -78,6 +84,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.12)',
     alignSelf: 'center',
+  },
+  containerLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
   },
   pill: {
     flexDirection: 'row',

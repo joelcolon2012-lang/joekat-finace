@@ -1,4 +1,4 @@
-﻿// =====================================================================
+// =====================================================================
 // MÓDULO JOEKAT AI - ASISTENTE FINANCIERO INTELIGENTE Y VERÍDICO
 // Consulta estrictamente datos reales calculados de la base de datos
 // =====================================================================
@@ -6,12 +6,14 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, TextInput, ScrollView, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinanceStore } from '../../store/financeStore';
+import { useThemeStore } from '../../store/themeStore';
 import { Colors, Radius } from '../../theme/designTokens';
 import { formatCurrency } from '../../utils/currency';
 import { calculateMonthlyTotals, getMonthComparisonText } from '../../utils/calculations';
 
 export const JoekatAIAssistant: React.FC = () => {
   const { transactions, categories, savingGoals, fixedExpenses, budgets } = useFinanceStore();
+  const { isDarkMode } = useThemeStore();
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
@@ -147,6 +149,7 @@ export const JoekatAIAssistant: React.FC = () => {
     <View
       style={[
         styles.cardContainer,
+        !isDarkMode && styles.cardContainerLight,
         Platform.OS === 'web' ? ({
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
@@ -159,17 +162,17 @@ export const JoekatAIAssistant: React.FC = () => {
           <Ionicons name="sparkles" size={16} color={Colors.secondaryGreen} />
         </View>
         <View style={{ flex: 1, marginLeft: 10 }}>
-          <Text style={styles.title}>JOEKAT AI</Text>
-          <Text style={styles.subtitle}>Asistente financiero basado exclusivamente en sus datos reales</Text>
+          <Text style={[styles.title, !isDarkMode && { color: '#071827' }]}>JOEKAT AI</Text>
+          <Text style={[styles.subtitle, !isDarkMode && { color: '#64748B' }]}>Asistente financiero basado exclusivamente en sus datos reales</Text>
         </View>
       </View>
 
       {/* Input de consulta */}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, !isDarkMode && styles.inputContainerLight]}>
         <TextInput
-          style={styles.textInput}
+          style={[styles.textInput, !isDarkMode && { color: '#071827' }]}
           placeholder="Pregúntale a JOEKAT sobre tus finanzas..."
-          placeholderTextColor="rgba(248, 245, 236, 0.4)"
+          placeholderTextColor={!isDarkMode ? '#94A3B8' : 'rgba(248, 245, 236, 0.4)'}
           value={query}
           onChangeText={setQuery}
           onSubmitEditing={() => handleAsk()}
@@ -179,7 +182,7 @@ export const JoekatAIAssistant: React.FC = () => {
           onPress={() => handleAsk()}
           style={styles.askBtn}
         >
-          <Ionicons name="arrow-up" size={16} color={Colors.darkNavy} />
+          <Ionicons name="arrow-up" size={16} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
@@ -193,25 +196,25 @@ export const JoekatAIAssistant: React.FC = () => {
               setQuery(sq);
               handleAsk(sq);
             }}
-            style={styles.chip}
+            style={[styles.chip, !isDarkMode && styles.chipLight]}
           >
-            <Text style={styles.chipText}>{sq}</Text>
+            <Text style={[styles.chipText, !isDarkMode && { color: '#334155' }]}>{sq}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
       {/* Respuesta de la IA */}
       {isThinking ? (
-        <View style={styles.responseCard}>
+        <View style={[styles.responseCard, !isDarkMode && styles.responseCardLight]}>
           <Text style={styles.thinkingText}>Analizando base de datos en tiempo real...</Text>
         </View>
       ) : response ? (
-        <View style={styles.responseCard}>
+        <View style={[styles.responseCard, !isDarkMode && styles.responseCardLight]}>
           <View style={styles.responseHeader}>
             <Ionicons name="checkmark-circle" size={16} color={Colors.secondaryGreen} style={{ marginRight: 6 }} />
             <Text style={styles.responseAuthor}>Respuesta JOEKAT:</Text>
           </View>
-          <Text style={styles.responseText}>{response}</Text>
+          <Text style={[styles.responseText, !isDarkMode && { color: '#071827' }]}>{response}</Text>
         </View>
       ) : null}
     </View>
@@ -331,5 +334,26 @@ const styles = StyleSheet.create({
     color: Colors.ivoryWhite,
     lineHeight: 19,
     fontWeight: '500',
+  },
+  cardContainerLight: {
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.06,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  inputContainerLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  chipLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  responseCardLight: {
+    backgroundColor: '#F0FDFA',
+    borderColor: 'rgba(20, 184, 166, 0.25)',
   },
 });

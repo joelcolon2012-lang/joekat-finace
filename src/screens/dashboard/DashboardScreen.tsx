@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFinanceStore } from '../../store/financeStore';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { Colors, Radius } from '../../theme/designTokens';
 import { JKBalanceCard } from '../../components/common/JKBalanceCard';
 import { JKTransactionCard } from '../../components/common/JKTransactionCard';
@@ -37,6 +38,7 @@ interface DashboardScreenProps {
 }
 
 export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
+  const { theme, isDarkMode } = useThemeStore();
   const {
     transactions,
     categories,
@@ -163,7 +165,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
   const recentTransactions = scopedTransactions.slice(0, 5);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -202,6 +204,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           <View
             style={[
               styles.pdfCard,
+              !isDarkMode && styles.cardLight,
               Platform.OS === 'web' ? ({
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
@@ -213,8 +216,8 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                 <Ionicons name="document-text" size={20} color={Colors.secondaryGreen} />
               </View>
               <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.pdfTitle}>Reporte Financiero Mensual</Text>
-                <Text style={styles.pdfSubtitle}>Documento ejecutivo formal de {formatMonthYear()}</Text>
+                <Text style={[styles.pdfTitle, !isDarkMode && { color: theme.textPrimary }]}>Reporte Financiero Mensual</Text>
+                <Text style={[styles.pdfSubtitle, !isDarkMode && { color: theme.textSecondary }]}>Documento ejecutivo formal de {formatMonthYear()}</Text>
               </View>
             </View>
 
@@ -226,10 +229,10 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                 style={[styles.pdfBtn, styles.pdfBtnPrimary]}
               >
                 {isDownloadingPdf ? (
-                  <ActivityIndicator size="small" color={Colors.darkNavy} />
+                  <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
                   <>
-                    <Ionicons name="cloud-download-outline" size={16} color={Colors.darkNavy} />
+                    <Ionicons name="cloud-download-outline" size={16} color="#FFFFFF" />
                     <Text style={styles.pdfBtnPrimaryText}>Descargar PDF</Text>
                   </>
                 )}
@@ -239,14 +242,18 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                 activeOpacity={0.85}
                 onPress={handlePrintReport}
                 disabled={isDownloadingPdf || isPrinting}
-                style={[styles.pdfBtn, styles.pdfBtnOutline]}
+                style={[
+                  styles.pdfBtn,
+                  styles.pdfBtnOutline,
+                  !isDarkMode && { backgroundColor: '#F1F5F9', borderColor: 'rgba(0, 0, 0, 0.08)' },
+                ]}
               >
                 {isPrinting ? (
-                  <ActivityIndicator size="small" color={Colors.ivoryWhite} />
+                  <ActivityIndicator size="small" color={!isDarkMode ? theme.textPrimary : Colors.ivoryWhite} />
                 ) : (
                   <>
-                    <Ionicons name="print-outline" size={16} color={Colors.ivoryWhite} />
-                    <Text style={styles.pdfBtnOutlineText}>Imprimir</Text>
+                    <Ionicons name="print-outline" size={16} color={!isDarkMode ? theme.textPrimary : Colors.ivoryWhite} />
+                    <Text style={[styles.pdfBtnOutlineText, !isDarkMode && { color: theme.textPrimary }]}>Imprimir</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -259,6 +266,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           <View
             style={[
               styles.fixedSummaryCard,
+              !isDarkMode && styles.cardLight,
               Platform.OS === 'web' ? ({
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
@@ -268,7 +276,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <View style={styles.widgetHeaderRow}>
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <View style={[styles.miniDot, { backgroundColor: Colors.secondaryGreen }]} />
-                <Text style={styles.widgetTitle}>Gastos Fijos del Mes</Text>
+                <Text style={[styles.widgetTitle, !isDarkMode && { color: theme.textPrimary }]}>Gastos Fijos del Mes</Text>
               </View>
               <TouchableOpacity onPress={() => navigation.navigate('FixedExpenses')}>
                 <Text style={styles.widgetLink}>Ver fijos</Text>
@@ -277,12 +285,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 
             <View style={styles.fixedMetricsRow}>
               <View style={styles.fixedMetricCol}>
-                <Text style={styles.metricLabel}>COMPROMISOS FIJOS</Text>
-                <Text style={styles.metricValue}>{formatCurrency(totalFixedExpenses, 'DOP')}</Text>
+                <Text style={[styles.metricLabel, !isDarkMode && { color: theme.textSecondary }]}>COMPROMISOS FIJOS</Text>
+                <Text style={[styles.metricValue, !isDarkMode && { color: theme.textPrimary }]}>{formatCurrency(totalFixedExpenses, 'DOP')}</Text>
               </View>
-              <View style={styles.metricDivider} />
+              <View style={[styles.metricDivider, !isDarkMode && { backgroundColor: theme.border }]} />
               <View style={styles.fixedMetricCol}>
-                <Text style={styles.metricLabel}>DISPONIBLE TRAS FIJOS</Text>
+                <Text style={[styles.metricLabel, !isDarkMode && { color: theme.textSecondary }]}>DISPONIBLE TRAS FIJOS</Text>
                 <Text style={[styles.metricValue, { color: Colors.secondaryGreen }]}>
                   {formatCurrency(estimatedFreeAfterFixed, 'DOP')}
                 </Text>
@@ -297,6 +305,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
             <View
               style={[
                 styles.goalsPreviewCard,
+                !isDarkMode && styles.cardLight,
                 Platform.OS === 'web' ? ({
                   backdropFilter: 'blur(16px)',
                   WebkitBackdropFilter: 'blur(16px)',
@@ -306,7 +315,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
               <View style={styles.widgetHeaderRow}>
                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                   <Ionicons name="flag" size={16} color={Colors.secondaryGreen} style={{ marginRight: 6 }} />
-                  <Text style={styles.widgetTitle}>Metas Prioritarias</Text>
+                  <Text style={[styles.widgetTitle, !isDarkMode && { color: theme.textPrimary }]}>Metas Prioritarias</Text>
                 </View>
                 <TouchableOpacity onPress={() => navigation.navigate('SavingGoals')}>
                   <Text style={styles.widgetLink}>Ver todas</Text>
@@ -320,16 +329,16 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                     <View style={styles.goalItemHeader}>
                       <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                         <Text style={styles.goalPriority}>#{goal.priority || idx + 1}</Text>
-                        <Text style={styles.goalName}>{goal.name}</Text>
+                        <Text style={[styles.goalName, !isDarkMode && { color: theme.textPrimary }]}>{goal.name}</Text>
                       </View>
                       <Text style={styles.goalPercentage}>{pct}%</Text>
                     </View>
-                    <View style={styles.progressBarTrack}>
+                    <View style={[styles.progressBarTrack, !isDarkMode && { backgroundColor: '#E2E8F0' }]}>
                       <View style={[styles.progressBarFill, { width: `${pct}%` }]} />
                     </View>
                     <View style={styles.goalAmountsRow}>
-                      <Text style={styles.goalSaved}>{formatCurrency(goal.current_amount, 'DOP')}</Text>
-                      <Text style={styles.goalTarget}>de {formatCurrency(goal.target_amount, 'DOP')}</Text>
+                      <Text style={[styles.goalSaved, !isDarkMode && { color: theme.textPrimary }]}>{formatCurrency(goal.current_amount, 'DOP')}</Text>
+                      <Text style={[styles.goalTarget, !isDarkMode && { color: theme.textMuted }]}>de {formatCurrency(goal.target_amount, 'DOP')}</Text>
                     </View>
                   </View>
                 );
@@ -341,7 +350,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         {/* 6. Movimientos Recientes con Acciones */}
         <View style={styles.sectionContainer}>
           <View style={styles.widgetHeaderRow}>
-            <Text style={styles.sectionMainTitle}>Movimientos Recientes</Text>
+            <Text style={[styles.sectionMainTitle, !isDarkMode && { color: theme.textPrimary }]}>Movimientos Recientes</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Movimientos')}>
               <Text style={styles.widgetLink}>Ver todos</Text>
             </TouchableOpacity>
@@ -434,6 +443,15 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     marginRight: 6,
+  },
+  cardLight: {
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 14,
+    elevation: 2,
   },
   pdfCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.08)',

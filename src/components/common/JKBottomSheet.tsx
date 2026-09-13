@@ -1,4 +1,3 @@
-// Componente JKBottomSheet para paneles emergentes inferiores rápidos
 import React from 'react';
 import {
   Modal,
@@ -8,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Animated,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../../store/themeStore';
@@ -27,13 +27,38 @@ export const JKBottomSheet: React.FC<JKBottomSheetProps> = ({
   title,
   children,
 }) => {
-  const { theme } = useThemeStore();
+  const { theme, isDarkMode } = useThemeStore();
 
   return (
     <Modal visible={visible} transparent={true} animationType="slide" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
+      <View
+        style={[
+          styles.backdrop,
+          Platform.OS === 'web'
+            ? ({
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+              } as any)
+            : null,
+        ]}
+      >
         <TouchableOpacity style={styles.outsideTouch} activeOpacity={1} onPress={onClose} />
-        <View style={[styles.sheet, { backgroundColor: theme.surfaceCard }]}>
+        <View
+          style={[
+            styles.sheet,
+            {
+              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.96)',
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+              borderTopWidth: 1,
+            },
+            Platform.OS === 'web'
+              ? ({
+                  backdropFilter: 'blur(25px)',
+                  WebkitBackdropFilter: 'blur(25px)',
+                } as any)
+              : null,
+          ]}
+        >
           <SafeAreaView>
             <View style={styles.handleContainer}>
               <View style={[styles.handle, { backgroundColor: theme.border }]} />

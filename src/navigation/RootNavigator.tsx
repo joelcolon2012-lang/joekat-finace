@@ -129,8 +129,8 @@ export const RootNavigator: React.FC = () => {
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: 'rgba(7, 24, 39, 0.92)',
-            borderTopColor: 'rgba(255, 255, 255, 0.12)',
+            backgroundColor: isDarkMode ? 'rgba(7, 24, 39, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+            borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
             borderTopWidth: 1,
             height: Platform.OS === 'ios' ? 86 : 68,
             paddingBottom: Platform.OS === 'ios' ? 24 : 10,
@@ -147,8 +147,8 @@ export const RootNavigator: React.FC = () => {
                 } as any)
               : {}),
           },
-          tabBarActiveTintColor: '#14B8A6',
-          tabBarInactiveTintColor: 'rgba(248, 245, 236, 0.55)',
+          tabBarActiveTintColor: theme.tabBarActive,
+          tabBarInactiveTintColor: theme.tabBarInactive,
           tabBarLabelStyle: {
             fontSize: 11,
             fontWeight: '600',
@@ -169,8 +169,8 @@ export const RootNavigator: React.FC = () => {
           component={TransactionsScreen}
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: '#071827' },
-            headerTintColor: '#F8F5EC',
+            headerStyle: { backgroundColor: theme.headerBackground },
+            headerTintColor: theme.headerText,
             headerTitle: 'Historial de Movimientos',
             tabBarLabel: 'Movimientos',
             tabBarIcon: ({ color, size }) => (
@@ -193,7 +193,7 @@ export const RootNavigator: React.FC = () => {
             tabBarLabel: '',
             tabBarIcon: () => (
               <View style={styles.floatingAddButton}>
-                <Ionicons name="add" size={32} color="#F8F5EC" />
+                <Ionicons name="add" size={32} color="#FFFFFF" />
               </View>
             ),
           }}
@@ -204,8 +204,8 @@ export const RootNavigator: React.FC = () => {
           component={BalanceAnalyticsScreen}
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: '#071827' },
-            headerTintColor: '#F8F5EC',
+            headerStyle: { backgroundColor: theme.headerBackground },
+            headerTintColor: theme.headerText,
             headerTitle: 'Análisis Financiero',
             tabBarLabel: 'Análisis',
             tabBarIcon: ({ color, size }) => (

@@ -1,4 +1,3 @@
-// Menú "Más" de navegación para JOEKAT FINACE
 import React from 'react';
 import {
   View,
@@ -8,6 +7,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Switch,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../../store/authStore';
@@ -80,7 +80,21 @@ export const MoreMenuScreen: React.FC<MoreMenuScreenProps> = ({ navigation }) =>
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Tarjeta de Perfil Rápido */}
-        <View style={[styles.profileCard, { backgroundColor: theme.surfaceCard, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.profileCard,
+            {
+              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.92)',
+              borderColor: isDarkMode ? theme.border : 'rgba(0, 0, 0, 0.08)',
+            },
+            Platform.OS === 'web'
+              ? ({
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                } as any)
+              : null,
+          ]}
+        >
           <JKAvatar name={activeMember} size={50} showBadge={true} />
           <View style={styles.profileInfoCol}>
             <Text style={[styles.memberName, { color: theme.textPrimary }]}>{activeMember}</Text>
@@ -91,17 +105,39 @@ export const MoreMenuScreen: React.FC<MoreMenuScreenProps> = ({ navigation }) =>
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() => switchMember(activeMember === 'Joel' ? 'Kat' : 'Joel')}
-            style={[styles.switchMemberBtn, { backgroundColor: BrandColors.lightSky }]}
+            style={[
+              styles.switchMemberBtn,
+              { backgroundColor: isDarkMode ? 'rgba(20, 184, 166, 0.2)' : 'rgba(15, 118, 110, 0.1)' },
+            ]}
           >
-            <Ionicons name="swap-horizontal" size={16} color={BrandColors.nightBlue} style={{ marginRight: 4 }} />
-            <Text style={styles.switchMemberText}>
+            <Ionicons
+              name="swap-horizontal"
+              size={16}
+              color={!isDarkMode ? '#0F766E' : BrandColors.nightBlue}
+              style={{ marginRight: 4 }}
+            />
+            <Text style={[styles.switchMemberText, !isDarkMode && { color: '#0F766E' }]}>
               Ver como {activeMember === 'Joel' ? 'Kat' : 'Joel'}
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Interruptor de Modo Oscuro Rápido */}
-        <View style={[styles.themeRow, { backgroundColor: theme.surfaceCard, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.themeRow,
+            {
+              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.92)',
+              borderColor: isDarkMode ? theme.border : 'rgba(0, 0, 0, 0.08)',
+            },
+            Platform.OS === 'web'
+              ? ({
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                } as any)
+              : null,
+          ]}
+        >
           <View style={styles.themeLeft}>
             <Ionicons
               name={isDarkMode ? 'moon' : 'sunny'}
@@ -131,9 +167,15 @@ export const MoreMenuScreen: React.FC<MoreMenuScreenProps> = ({ navigation }) =>
               style={[
                 styles.menuItemCard,
                 {
-                  backgroundColor: theme.surfaceCard,
-                  borderColor: theme.border,
+                  backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.92)',
+                  borderColor: isDarkMode ? theme.border : 'rgba(0, 0, 0, 0.08)',
                 },
+                Platform.OS === 'web'
+                  ? ({
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                    } as any)
+                  : null,
               ]}
             >
               <View style={[styles.iconCircle, { backgroundColor: `${item.color}15` }]}>

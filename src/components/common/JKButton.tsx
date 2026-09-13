@@ -42,18 +42,19 @@ export const JKButton: React.FC<JKButtonProps> = ({
   style,
   textStyle,
 }) => {
-  const { theme } = useThemeStore();
+  const { theme, isDarkMode } = useThemeStore();
 
   const getVariantStyles = (): { container: ViewStyle; text: TextStyle } => {
     switch (variant) {
       case 'secondary':
         return {
           container: {
-            backgroundColor: BrandColors.lightSky,
-            borderWidth: 0,
+            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : '#F1F5F9',
+            borderWidth: 1,
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
           },
           text: {
-            color: BrandColors.nightBlue,
+            color: isDarkMode ? '#FFFFFF' : '#071827',
           },
         };
       case 'outline':
@@ -61,10 +62,10 @@ export const JKButton: React.FC<JKButtonProps> = ({
           container: {
             backgroundColor: 'transparent',
             borderWidth: 1.5,
-            borderColor: theme.accent,
+            borderColor: isDarkMode ? '#14B8A6' : '#0F766E',
           },
           text: {
-            color: theme.accent,
+            color: isDarkMode ? '#14B8A6' : '#0F766E',
           },
         };
       case 'danger':
@@ -84,7 +85,7 @@ export const JKButton: React.FC<JKButtonProps> = ({
             borderWidth: 0,
           },
           text: {
-            color: theme.accent,
+            color: isDarkMode ? '#14B8A6' : '#0F766E',
           },
         };
       case 'primary':

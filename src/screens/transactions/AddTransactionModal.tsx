@@ -18,6 +18,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useFinanceStore } from '../../store/financeStore';
 import { useAuthStore } from '../../store/authStore';
+import { useThemeStore } from '../../store/themeStore';
 import { Colors, Radius } from '../../theme/designTokens';
 import { Transaction, TransactionType, FamilyMemberName, TransactionOwner } from '../../types';
 import { toast } from '../../components/common/JKToast';
@@ -48,6 +49,7 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
     depositToGoal,
   } = useFinanceStore();
   const { activeMember } = useAuthStore();
+  const { isDarkMode } = useThemeStore();
 
   const isEditing = !!initialTransaction;
 
@@ -196,11 +198,12 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
+        style={[styles.modalOverlay, !isDarkMode && { backgroundColor: 'rgba(7, 24, 39, 0.45)' }]}
       >
         <View
           style={[
             styles.modalContent,
+            !isDarkMode && styles.modalContentLight,
             Platform.OS === 'web' ? ({
               backdropFilter: 'blur(25px)',
               WebkitBackdropFilter: 'blur(25px)',
@@ -208,12 +211,16 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
           ]}
         >
           {/* Header con botón cerrar */}
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>
+          <View style={[styles.modalHeader, !isDarkMode && { borderBottomColor: 'rgba(0, 0, 0, 0.08)' }]}>
+            <Text style={[styles.modalTitle, !isDarkMode && { color: '#071827' }]}>
               {isEditing ? 'Editar Movimiento' : 'Nuevo Movimiento'}
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
-              <Ionicons name="close" size={20} color={Colors.ivoryWhite} />
+            <TouchableOpacity
+              onPress={onClose}
+              style={[styles.closeBtn, !isDarkMode && { backgroundColor: 'rgba(0, 0, 0, 0.06)' }]}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="close" size={20} color={!isDarkMode ? '#071827' : Colors.ivoryWhite} />
             </TouchableOpacity>
           </View>
 
@@ -235,6 +242,7 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
                     onPress={() => setType(t.id as TransactionType)}
                     style={[
                       styles.typeChip,
+                      !isDarkMode && styles.typeChipLight,
                       isSelected && {
                         backgroundColor: t.color,
                         borderColor: t.color,
@@ -244,7 +252,8 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
                     <Text
                       style={[
                         styles.typeChipText,
-                        isSelected && { color: Colors.darkNavy, fontWeight: '800' },
+                        !isDarkMode && !isSelected && { color: '#071827' },
+                        isSelected && { color: '#FFFFFF', fontWeight: '800' },
                       ]}
                     >
                       {t.label}
@@ -255,12 +264,12 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
             </View>
 
             {/* 2. Campo de Monto Principal */}
-            <View style={styles.amountContainer}>
-              <Text style={styles.amountCurrencyPrefix}>RD$</Text>
+            <View style={[styles.amountContainer, !isDarkMode && styles.amountContainerLight]}>
+              <Text style={[styles.amountCurrencyPrefix, !isDarkMode && { color: '#0F766E' }]}>RD$</Text>
               <TextInput
-                style={styles.amountInput}
+                style={[styles.amountInput, !isDarkMode && { color: '#071827' }]}
                 placeholder="0.00"
-                placeholderTextColor="rgba(248, 245, 236, 0.35)"
+                placeholderTextColor={!isDarkMode ? '#94A3B8' : 'rgba(248, 245, 236, 0.35)'}
                 keyboardType="decimal-pad"
                 value={amount}
                 onChangeText={setAmount}
@@ -271,7 +280,7 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
             {/* 3. Selección de Meta si es Ahorro */}
             {type === 'savings' && savingGoals.length > 0 ? (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>META DE AHORRO</Text>
+                <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>META DE AHORRO</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalChips}>
                   {savingGoals.map((g) => {
                     const isSelected = selectedGoalId === g.id;
@@ -282,16 +291,23 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
                         onPress={() => setSelectedGoalId(g.id)}
                         style={[
                           styles.categoryChip,
+                          !isDarkMode && styles.categoryChipLight,
                           isSelected && styles.categoryChipActive,
                         ]}
                       >
                         <Ionicons
                           name={(g.icon as any) || 'flag'}
                           size={14}
-                          color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                          color={isSelected ? Colors.darkNavy : !isDarkMode ? '#0F766E' : Colors.ivoryWhite}
                           style={{ marginRight: 6 }}
                         />
-                        <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                        <Text
+                          style={[
+                            styles.categoryChipText,
+                            !isDarkMode && !isSelected && { color: '#071827' },
+                            isSelected && styles.categoryChipTextActive,
+                          ]}
+                        >
                           {g.name}
                         </Text>
                       </TouchableOpacity>
@@ -304,7 +320,7 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
             {/* 4. Categoría (para Gasto, Ingreso o Deuda) */}
             {type !== 'transfer' && (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>CATEGORÍA</Text>
+                <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>CATEGORÍA</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalChips}>
                   {currentCategories.map((c) => {
                     const isSelected = selectedCategoryId === c.id;
@@ -315,16 +331,23 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
                         onPress={() => setSelectedCategoryId(c.id)}
                         style={[
                           styles.categoryChip,
+                          !isDarkMode && styles.categoryChipLight,
                           isSelected && styles.categoryChipActive,
                         ]}
                       >
                         <Ionicons
                           name={(c.icon as any) || 'pricetag'}
                           size={14}
-                          color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                          color={isSelected ? Colors.darkNavy : !isDarkMode ? '#0F766E' : Colors.ivoryWhite}
                           style={{ marginRight: 6 }}
                         />
-                        <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                        <Text
+                          style={[
+                            styles.categoryChipText,
+                            !isDarkMode && !isSelected && { color: '#071827' },
+                            isSelected && styles.categoryChipTextActive,
+                          ]}
+                        >
                           {c.name}
                         </Text>
                       </TouchableOpacity>
@@ -336,7 +359,7 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
 
             {/* 5. Responsable: Joel / Kath / Compartido */}
             <View style={styles.sectionBlock}>
-              <Text style={styles.sectionLabel}>RESPONSABLE</Text>
+              <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>RESPONSABLE</Text>
               <View style={styles.personRow}>
                 {[
                   { id: 'Joel', label: 'Joel', icon: 'person' },
@@ -351,16 +374,23 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
                       onPress={() => setSelectedPerson(p.id as FamilyMemberName)}
                       style={[
                         styles.personChip,
+                        !isDarkMode && styles.personChipLight,
                         isSelected && styles.personChipActive,
                       ]}
                     >
                       <Ionicons
                         name={p.icon as any}
                         size={14}
-                        color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                        color={isSelected ? Colors.darkNavy : !isDarkMode ? '#0F766E' : Colors.ivoryWhite}
                         style={{ marginRight: 6 }}
                       />
-                      <Text style={[styles.personChipText, isSelected && styles.personChipTextActive]}>
+                      <Text
+                        style={[
+                          styles.personChipText,
+                          !isDarkMode && !isSelected && { color: '#071827' },
+                          isSelected && styles.personChipTextActive,
+                        ]}
+                      >
                         {p.label}
                       </Text>
                     </TouchableOpacity>
@@ -373,26 +403,26 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
             <View style={styles.twoColsRow}>
               {/* Fecha */}
               <View style={{ flex: 1 }}>
-                <Text style={styles.sectionLabel}>FECHA</Text>
-                <View style={styles.inputBox}>
-                  <Ionicons name="calendar-outline" size={16} color={Colors.secondaryGreen} style={{ marginRight: 8 }} />
+                <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>FECHA</Text>
+                <View style={[styles.inputBox, !isDarkMode && styles.inputBoxLight]}>
+                  <Ionicons name="calendar-outline" size={16} color={!isDarkMode ? '#0F766E' : Colors.secondaryGreen} style={{ marginRight: 8 }} />
                   <TextInput
-                    style={styles.textInputSmall}
+                    style={[styles.textInputSmall, !isDarkMode && { color: '#071827' }]}
                     value={date}
                     onChangeText={setDate}
                     placeholder="YYYY-MM-DD"
-                    placeholderTextColor="rgba(248, 245, 236, 0.4)"
+                    placeholderTextColor={!isDarkMode ? '#94A3B8' : 'rgba(248, 245, 236, 0.4)'}
                   />
                 </View>
               </View>
 
               {/* Cuenta Origen */}
               <View style={{ flex: 1 }}>
-                <Text style={styles.sectionLabel}>CUENTA</Text>
-                <View style={styles.inputBox}>
-                  <Ionicons name="card-outline" size={16} color={Colors.secondaryGreen} style={{ marginRight: 8 }} />
+                <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>CUENTA</Text>
+                <View style={[styles.inputBox, !isDarkMode && styles.inputBoxLight]}>
+                  <Ionicons name="card-outline" size={16} color={!isDarkMode ? '#0F766E' : Colors.secondaryGreen} style={{ marginRight: 8 }} />
                   <TextInput
-                    style={styles.textInputSmall}
+                    style={[styles.textInputSmall, !isDarkMode && { color: '#071827' }]}
                     value={accounts.find((a) => a.id === selectedAccountId)?.name || 'Cuenta'}
                     editable={false}
                   />
@@ -403,7 +433,7 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
             {/* Cuenta Destino (Solo si es Transferencia) */}
             {type === 'transfer' ? (
               <View style={styles.sectionBlock}>
-                <Text style={styles.sectionLabel}>CUENTA DESTINO</Text>
+                <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>CUENTA DESTINO</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalChips}>
                   {accounts
                     .filter((a) => a.id !== selectedAccountId)
@@ -416,16 +446,23 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
                           onPress={() => setDestinationAccountId(a.id)}
                           style={[
                             styles.categoryChip,
+                            !isDarkMode && styles.categoryChipLight,
                             isSelected && styles.categoryChipActive,
                           ]}
                         >
                           <Ionicons
                             name="arrow-forward-circle-outline"
                             size={14}
-                            color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                            color={isSelected ? Colors.darkNavy : !isDarkMode ? '#0F766E' : Colors.ivoryWhite}
                             style={{ marginRight: 6 }}
                           />
-                          <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                          <Text
+                            style={[
+                              styles.categoryChipText,
+                              !isDarkMode && !isSelected && { color: '#071827' },
+                              isSelected && styles.categoryChipTextActive,
+                            ]}
+                          >
                             {a.name}
                           </Text>
                         </TouchableOpacity>
@@ -437,12 +474,12 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
 
             {/* 7. Descripción Opcional */}
             <View style={styles.sectionBlock}>
-              <Text style={styles.sectionLabel}>DESCRIPCIÓN (OPCIONAL)</Text>
-              <View style={styles.inputBox}>
+              <Text style={[styles.sectionLabel, !isDarkMode && { color: '#64748B' }]}>DESCRIPCIÓN (OPCIONAL)</Text>
+              <View style={[styles.inputBox, !isDarkMode && styles.inputBoxLight]}>
                 <TextInput
-                  style={styles.textInputFull}
+                  style={[styles.textInputFull, !isDarkMode && { color: '#071827' }]}
                   placeholder="Ej. Supermercado Nacional, Cena familiar..."
-                  placeholderTextColor="rgba(248, 245, 236, 0.4)"
+                  placeholderTextColor={!isDarkMode ? '#94A3B8' : 'rgba(248, 245, 236, 0.4)'}
                   value={description}
                   onChangeText={setDescription}
                 />
@@ -454,10 +491,10 @@ export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
               activeOpacity={0.85}
               onPress={handleSubmit}
               disabled={isSubmitting}
-              style={styles.saveBtn}
+              style={[styles.saveBtn, !isDarkMode && styles.saveBtnLight]}
             >
-              <Ionicons name="checkmark-circle-outline" size={20} color={Colors.darkNavy} style={{ marginRight: 8 }} />
-              <Text style={styles.saveBtnText}>
+              <Ionicons name="checkmark-circle-outline" size={20} color={!isDarkMode ? '#FFFFFF' : Colors.darkNavy} style={{ marginRight: 8 }} />
+              <Text style={[styles.saveBtnText, !isDarkMode && { color: '#FFFFFF' }]}>
                 {isSubmitting ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Registrar Movimiento'}
               </Text>
             </TouchableOpacity>
@@ -661,10 +698,42 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
   },
+  saveBtnLight: {
+    backgroundColor: '#0F766E',
+    shadowColor: '#0F766E',
+  },
   saveBtnText: {
     fontSize: 15,
     fontWeight: '800',
     color: Colors.darkNavy,
     letterSpacing: 0.2,
+  },
+  modalContentLight: {
+    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+    shadowColor: '#000000',
+    shadowOpacity: 0.12,
+    shadowOffset: { width: 0, height: -4 },
+    shadowRadius: 24,
+  },
+  typeChipLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  amountContainerLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  categoryChipLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  personChipLight: {
+    backgroundColor: '#F1F5F9',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
+  },
+  inputBoxLight: {
+    backgroundColor: '#F8FAFC',
+    borderColor: 'rgba(0, 0, 0, 0.08)',
   },
 });

@@ -108,7 +108,17 @@ export const JKToast: React.FC = () => {
       ]}
       pointerEvents="box-none"
     >
-      <View style={styles.toastCard}>
+      <View
+        style={[
+          styles.toastCard,
+          Platform.OS === 'web'
+            ? ({
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+              } as any)
+            : null,
+        ]}
+      >
         <View style={styles.iconCol}>
           {isUndo ? (
             <Ionicons name="arrow-undo-circle" size={20} color={BrandColors.skyBlue} />

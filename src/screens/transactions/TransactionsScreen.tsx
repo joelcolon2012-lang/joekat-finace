@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinanceStore } from '../../store/financeStore';
@@ -184,9 +185,9 @@ export const TransactionsScreen: React.FC = () => {
         </View>
 
         {/* Chips de Filtro Rápido */}
-        <View style={styles.filterScroll}>
+        <View style={{ gap: 6, marginTop: 4 }}>
           {/* Persona */}
-          <View style={styles.chipGroup}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipGroup}>
             {(['Todos', 'Joel', 'Kath', 'Compartido'] as const).map((p) => (
               <TouchableOpacity
                 key={p}
@@ -209,10 +210,10 @@ export const TransactionsScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
 
           {/* Tipo */}
-          <View style={styles.chipGroup}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipGroup}>
             {(['Todos', 'expense', 'income', 'savings', 'debt', 'transfer'] as const).map((t) => (
               <TouchableOpacity
                 key={t}
@@ -245,7 +246,7 @@ export const TransactionsScreen: React.FC = () => {
                 </Text>
               </TouchableOpacity>
             ))}
-          </View>
+          </ScrollView>
         </View>
       </View>
 

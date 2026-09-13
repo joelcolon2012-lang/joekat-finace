@@ -9,6 +9,8 @@ import { useFinanceStore } from './src/store/financeStore';
 import { useAuthStore } from './src/store/authStore';
 import { authenticateWithBiometrics } from './src/services/biometrics';
 import { BrandColors } from './src/theme/colors';
+import * as Font from 'expo-font';
+import { Ionicons } from '@expo/vector-icons';
 
 import { JKToast } from './src/components/common/JKToast';
 import { initAlertPolyfill } from './src/utils/alertPolyfill';
@@ -28,7 +30,12 @@ export default function App() {
 
     const initializeApp = async () => {
       try {
-        await Promise.all([loadPreferences(), loadLocalData(), checkSession()]);
+        await Promise.all([
+          loadPreferences(),
+          loadLocalData(),
+          checkSession(),
+          Font.loadAsync(Ionicons.font).catch(() => {}),
+        ]);
         unsubscribeRealtime = subscribeToRealtime();
 
         const currentBio = useThemeStore.getState().isBiometricsEnabled;

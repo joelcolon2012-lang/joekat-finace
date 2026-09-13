@@ -22,16 +22,39 @@ interface JKModalProps {
 }
 
 export const JKModal: React.FC<JKModalProps> = ({ visible, onClose, title, children }) => {
-  const { theme } = useThemeStore();
+  const { theme, isDarkMode } = useThemeStore();
 
   return (
     <Modal visible={visible} transparent={true} animationType="fade" onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.backdrop}
+        style={[
+          styles.backdrop,
+          Platform.OS === 'web'
+            ? ({
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+              } as any)
+            : null,
+        ]}
       >
         <TouchableOpacity style={styles.outsideTouch} activeOpacity={1} onPress={onClose} />
-        <View style={[styles.dialog, { backgroundColor: theme.surfaceCard }]}>
+        <View
+          style={[
+            styles.dialog,
+            {
+              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.96)',
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+              borderWidth: 1,
+            },
+            Platform.OS === 'web'
+              ? ({
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                } as any)
+              : null,
+          ]}
+        >
           <View style={styles.header}>
             <Text style={[styles.title, { color: theme.textPrimary }]}>{title || ''}</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

@@ -1,11 +1,13 @@
-﻿import React from 'react';
+import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp, Platform } from 'react-native';
 import { Radius } from '../../theme/designTokens';
+
+import { useThemeStore } from '../../store/themeStore';
 
 interface GlassCardProps {
   children: React.ReactNode;
   style?: StyleProp<ViewStyle>;
-  variant?: 'default' | 'strong' | 'subtle' | 'ivory' | 'accent';
+  variant?: 'default' | 'strong' | 'subtle' | 'ivory' | 'accent' | 'dark';
   borderRadius?: number;
   padding?: number;
 }
@@ -17,20 +19,22 @@ export const GlassCard: React.FC<GlassCardProps> = ({
   borderRadius = Radius.xl,
   padding = 16,
 }) => {
-  let bg = 'rgba(255, 255, 255, 0.08)';
-  let border = 'rgba(255, 255, 255, 0.12)';
+  const { isDarkMode } = useThemeStore();
 
-  if (variant === 'strong') {
-    bg = 'rgba(255, 255, 255, 0.13)';
-    border = 'rgba(255, 255, 255, 0.20)';
+  let bg = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.92)';
+  let border = isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)';
+
+  if (variant === 'dark') {
+    bg = '#071827';
+    border = 'rgba(255, 255, 255, 0.12)';
+  } else if (variant === 'strong') {
+    bg = isDarkMode ? 'rgba(255, 255, 255, 0.13)' : '#FFFFFF';
+    border = isDarkMode ? 'rgba(255, 255, 255, 0.20)' : 'rgba(0, 0, 0, 0.10)';
   } else if (variant === 'subtle') {
-    bg = 'rgba(255, 255, 255, 0.04)';
-    border = 'rgba(255, 255, 255, 0.08)';
-  } else if (variant === 'ivory') {
-    bg = 'rgba(248, 245, 236, 0.09)';
-    border = 'rgba(248, 245, 236, 0.18)';
+    bg = isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(248, 250, 252, 0.85)';
+    border = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
   } else if (variant === 'accent') {
-    bg = 'rgba(15, 118, 110, 0.18)';
+    bg = isDarkMode ? 'rgba(15, 118, 110, 0.18)' : 'rgba(15, 118, 110, 0.08)';
     border = 'rgba(20, 184, 166, 0.35)';
   }
 

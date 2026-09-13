@@ -1,4 +1,4 @@
-﻿// =====================================================================
+// =====================================================================
 // SISTEMA DE COLOR - JOEKAT FINANCE FINTECH PREMIUM
 // Paleta: Verde Profundo, Verde Financiero, Azul Oscuro, Blanco Marfil
 // =====================================================================
@@ -110,25 +110,25 @@ export const DarkTheme: ThemeColors = {
 
 export const LightTheme: ThemeColors = {
   mode: 'light',
-  background: '#F8F5EC',           // Blanco marfil
+  background: '#FFFFFF',           // Fondo blanco puro solicitado por el usuario
   surface: '#FFFFFF',
   surfaceCard: '#FFFFFF',
-  surfaceCardAlt: 'rgba(15, 118, 110, 0.06)',
-  headerBackground: '#071827',
-  headerText: '#F8F5EC',
-  textPrimary: '#071827',          // Azul oscuro
-  textSecondary: '#102A43',
+  surfaceCardAlt: '#F8FAFC',
+  headerBackground: '#FFFFFF',
+  headerText: '#071827',
+  textPrimary: '#071827',          // Azul marino oscuro para máxima legibilidad
+  textSecondary: '#334155',
   textMuted: '#64748B',
-  textInverse: '#F8F5EC',
-  accent: '#0F766E',               // Verde profundo
-  accentLight: '#14B8A6',
+  textInverse: '#FFFFFF',
+  accent: '#0F766E',               // Verde profundo fintech
+  accentLight: '#14B8A6',          // Verde secundario
   highlight: '#14B8A6',
-  border: 'rgba(7, 24, 39, 0.12)',
+  border: 'rgba(0, 0, 0, 0.08)',
   borderFocus: '#0F766E',
-  tabBarBackground: '#FFFFFF',
+  tabBarBackground: 'rgba(255, 255, 255, 0.88)', // Menú con transparencia
   tabBarActive: '#0F766E',
-  tabBarInactive: '#94A3B8',
-  cardShadow: 'rgba(7, 24, 39, 0.08)',
+  tabBarInactive: '#64748B',
+  cardShadow: 'rgba(0, 0, 0, 0.06)',
   statusGreen: '#0F766E',
   statusRed: '#EF4444',
 };

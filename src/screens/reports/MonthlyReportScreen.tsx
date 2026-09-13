@@ -26,7 +26,7 @@ import { Spacing, BorderRadius } from '../../theme/spacing';
 export const MonthlyReportScreen: React.FC = () => {
   const { transactions, categories, accounts, budgets, savingGoals, closeMonth } = useFinanceStore();
   const { activeMember } = useAuthStore();
-  const { theme, currency } = useThemeStore();
+  const { theme, currency, isDarkMode } = useThemeStore();
 
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -303,7 +303,7 @@ export const MonthlyReportScreen: React.FC = () => {
             loading={isPrinting}
             variant="secondary"
             size="lg"
-            icon={<Ionicons name="print-outline" size={20} color={BrandColors.nightBlue} />}
+            icon={<Ionicons name="print-outline" size={20} color={isDarkMode ? '#FFFFFF' : '#071827'} />}
             style={{ marginBottom: Spacing.sm }}
           />
 
@@ -313,7 +313,7 @@ export const MonthlyReportScreen: React.FC = () => {
             loading={isExportingCsv}
             variant="secondary"
             size="lg"
-            icon={<Ionicons name="download-outline" size={20} color={BrandColors.nightBlue} />}
+            icon={<Ionicons name="download-outline" size={20} color={isDarkMode ? '#FFFFFF' : '#071827'} />}
             style={{ marginBottom: Spacing.md }}
           />
 
@@ -322,7 +322,7 @@ export const MonthlyReportScreen: React.FC = () => {
             onPress={handleCloseMonth}
             variant="outline"
             size="md"
-            icon={<Ionicons name="lock-closed-outline" size={18} color={BrandColors.deepBlue} />}
+            icon={<Ionicons name="lock-closed-outline" size={18} color={isDarkMode ? '#14B8A6' : '#0F766E'} />}
           />
         </View>
       </ScrollView>
