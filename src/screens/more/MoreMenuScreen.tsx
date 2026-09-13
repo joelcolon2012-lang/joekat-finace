@@ -84,8 +84,8 @@ export const MoreMenuScreen: React.FC<MoreMenuScreenProps> = ({ navigation }) =>
           style={[
             styles.profileCard,
             {
-              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.92)',
-              borderColor: isDarkMode ? theme.border : 'rgba(0, 0, 0, 0.08)',
+              backgroundColor: isDarkMode ? theme.surfaceCard : '#FFFFFF',
+              borderColor: isDarkMode ? theme.border : 'rgba(7, 24, 39, 0.08)',
             },
             Platform.OS === 'web'
               ? ({
@@ -127,8 +127,8 @@ export const MoreMenuScreen: React.FC<MoreMenuScreenProps> = ({ navigation }) =>
           style={[
             styles.themeRow,
             {
-              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.92)',
-              borderColor: isDarkMode ? theme.border : 'rgba(0, 0, 0, 0.08)',
+              backgroundColor: isDarkMode ? theme.surfaceCard : '#FFFFFF',
+              borderColor: isDarkMode ? theme.border : 'rgba(7, 24, 39, 0.08)',
             },
             Platform.OS === 'web'
               ? ({
@@ -167,8 +167,8 @@ export const MoreMenuScreen: React.FC<MoreMenuScreenProps> = ({ navigation }) =>
               style={[
                 styles.menuItemCard,
                 {
-                  backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.92)',
-                  borderColor: isDarkMode ? theme.border : 'rgba(0, 0, 0, 0.08)',
+                  backgroundColor: isDarkMode ? theme.surfaceCard : '#FFFFFF',
+                  borderColor: isDarkMode ? theme.border : 'rgba(7, 24, 39, 0.08)',
                 },
                 Platform.OS === 'web'
                   ? ({

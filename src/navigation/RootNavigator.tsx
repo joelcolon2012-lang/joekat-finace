@@ -129,8 +129,8 @@ export const RootNavigator: React.FC = () => {
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: isDarkMode ? 'rgba(7, 24, 39, 0.88)' : 'rgba(255, 255, 255, 0.88)',
-            borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+            backgroundColor: isDarkMode ? 'rgba(7, 24, 39, 0.88)' : 'rgba(248, 245, 236, 0.90)',
+            borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(7, 24, 39, 0.08)',
             borderTopWidth: 1,
             height: Platform.OS === 'ios' ? 86 : 68,
             paddingBottom: Platform.OS === 'ios' ? 24 : 10,

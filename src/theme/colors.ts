@@ -110,11 +110,11 @@ export const DarkTheme: ThemeColors = {
 
 export const LightTheme: ThemeColors = {
   mode: 'light',
-  background: '#FFFFFF',           // Fondo blanco puro solicitado por el usuario
+  background: '#F8F5EC',           // Blanco marfil solicitado por el usuario
   surface: '#FFFFFF',
   surfaceCard: '#FFFFFF',
-  surfaceCardAlt: '#F8FAFC',
-  headerBackground: '#FFFFFF',
+  surfaceCardAlt: '#F0ECE1',       // Marfil suave alternativo
+  headerBackground: '#F8F5EC',     // Blanco marfil
   headerText: '#071827',
   textPrimary: '#071827',          // Azul marino oscuro para máxima legibilidad
   textSecondary: '#334155',
@@ -123,9 +123,9 @@ export const LightTheme: ThemeColors = {
   accent: '#0F766E',               // Verde profundo fintech
   accentLight: '#14B8A6',          // Verde secundario
   highlight: '#14B8A6',
-  border: 'rgba(0, 0, 0, 0.08)',
+  border: 'rgba(7, 24, 39, 0.08)',
   borderFocus: '#0F766E',
-  tabBarBackground: 'rgba(255, 255, 255, 0.88)', // Menú con transparencia
+  tabBarBackground: 'rgba(248, 245, 236, 0.90)', // Menú con transparencia marfil
   tabBarActive: '#0F766E',
   tabBarInactive: '#64748B',
   cardShadow: 'rgba(0, 0, 0, 0.06)',

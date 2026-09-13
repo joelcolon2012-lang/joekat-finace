@@ -327,8 +327,8 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   menuItemLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(248, 245, 236, 0.94)',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
     shadowColor: '#000000',
     shadowOpacity: 0.06,
     shadowOffset: { width: 0, height: 2 },

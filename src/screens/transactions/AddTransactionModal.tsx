@@ -709,31 +709,31 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   modalContentLight: {
-    backgroundColor: 'rgba(255, 255, 255, 0.98)',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: 'rgba(248, 245, 236, 0.98)',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
     shadowColor: '#000000',
     shadowOpacity: 0.12,
     shadowOffset: { width: 0, height: -4 },
     shadowRadius: 24,
   },
   typeChipLight: {
-    backgroundColor: '#F1F5F9',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#EDE8DE',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
   },
   amountContainerLight: {
-    backgroundColor: '#F8FAFC',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
   },
   categoryChipLight: {
-    backgroundColor: '#F1F5F9',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#EDE8DE',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
   },
   personChipLight: {
-    backgroundColor: '#F1F5F9',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#EDE8DE',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
   },
   inputBoxLight: {
-    backgroundColor: '#F8FAFC',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#FFFFFF',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
   },
 });

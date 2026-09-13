@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   containerLight: {
-    backgroundColor: '#F1F5F9',
-    borderColor: 'rgba(0, 0, 0, 0.08)',
+    backgroundColor: '#EDE8DE',
+    borderColor: 'rgba(7, 24, 39, 0.08)',
   },
   pill: {
     flexDirection: 'row',

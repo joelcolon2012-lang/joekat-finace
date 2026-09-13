@@ -19,15 +19,15 @@ export const Colors = {
   textMutedLight: '#64748B',    // Texto tenue
 
   // Glassmorphism & Transparencias para menús y tarjetas
-  glassBg: 'rgba(255, 255, 255, 0.88)',
+  glassBg: 'rgba(248, 245, 236, 0.90)',
   glassBgDark: 'rgba(7, 24, 39, 0.88)',
-  glassBgStrong: 'rgba(255, 255, 255, 0.95)',
-  glassBgSubtle: 'rgba(255, 255, 255, 0.70)',
-  glassBorder: 'rgba(0, 0, 0, 0.08)',
+  glassBgStrong: 'rgba(248, 245, 236, 0.96)',
+  glassBgSubtle: 'rgba(248, 245, 236, 0.70)',
+  glassBorder: 'rgba(7, 24, 39, 0.08)',
   glassBorderDark: 'rgba(255, 255, 255, 0.12)',
-  glassBorderStrong: 'rgba(0, 0, 0, 0.14)',
-  navGlassBg: 'rgba(255, 255, 255, 0.88)', // Barra de navegación con transparencia y blur
-  menuGlassBg: 'rgba(255, 255, 255, 0.92)', // Menús flotantes y contextuales con transparencia
+  glassBorderStrong: 'rgba(7, 24, 39, 0.14)',
+  navGlassBg: 'rgba(248, 245, 236, 0.90)', // Barra de navegación con transparencia marfil y blur
+  menuGlassBg: 'rgba(248, 245, 236, 0.94)', // Menús flotantes y contextuales con transparencia marfil
 
   // Estados semánticos
   income: '#14B8A6',

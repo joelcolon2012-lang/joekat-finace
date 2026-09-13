@@ -43,8 +43,8 @@ export const JKModal: React.FC<JKModalProps> = ({ visible, onClose, title, child
           style={[
             styles.dialog,
             {
-              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(255, 255, 255, 0.96)',
-              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)',
+              backgroundColor: isDarkMode ? theme.surfaceCard : 'rgba(248, 245, 236, 0.98)',
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(7, 24, 39, 0.08)',
               borderWidth: 1,
             },
             Platform.OS === 'web'
