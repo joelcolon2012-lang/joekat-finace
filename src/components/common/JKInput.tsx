@@ -88,7 +88,7 @@ const styles = StyleSheet.create({
   },
   textInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
     paddingVertical: 10,
   },
   leftIconContainer: {

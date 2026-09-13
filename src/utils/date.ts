@@ -46,17 +46,21 @@ export const getTodayDateString = (): string => {
   return `${y}-${m}-${d}`;
 };
 
-export const isToday = (dateString: string): boolean => {
-  return dateString === getTodayDateString();
-};
-
-export const isYesterday = (dateString: string): boolean => {
+export const getYesterdayDateString = (): string => {
   const yest = new Date();
   yest.setDate(yest.getDate() - 1);
   const y = yest.getFullYear();
   const m = String(yest.getMonth() + 1).padStart(2, '0');
   const d = String(yest.getDate()).padStart(2, '0');
-  return dateString === `${y}-${m}-${d}`;
+  return `${y}-${m}-${d}`;
+};
+
+export const isToday = (dateString: string): boolean => {
+  return dateString === getTodayDateString();
+};
+
+export const isYesterday = (dateString: string): boolean => {
+  return dateString === getYesterdayDateString();
 };
 
 export const getDateHeaderLabel = (dateString: string): string => {

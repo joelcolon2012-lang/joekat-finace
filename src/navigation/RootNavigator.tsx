@@ -132,8 +132,8 @@ export const RootNavigator: React.FC = () => {
             backgroundColor: isDarkMode ? 'rgba(7, 24, 39, 0.88)' : 'rgba(248, 245, 236, 0.90)',
             borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(7, 24, 39, 0.08)',
             borderTopWidth: 1,
-            height: Platform.OS === 'ios' ? 86 : 68,
-            paddingBottom: Platform.OS === 'ios' ? 24 : 10,
+            height: Platform.OS === 'ios' ? 86 : 74,
+            paddingBottom: Platform.OS === 'ios' ? 24 : 14,
             paddingTop: 8,
             ...(Platform.OS === 'web'
               ? ({
@@ -144,6 +144,8 @@ export const RootNavigator: React.FC = () => {
                   left: 0,
                   right: 0,
                   zIndex: 100,
+                  paddingBottom: 'max(14px, env(safe-area-inset-bottom, 14px))',
+                  height: 'calc(58px + max(14px, env(safe-area-inset-bottom, 14px)))',
                 } as any)
               : {}),
           },
@@ -245,7 +247,7 @@ const styles = StyleSheet.create({
     borderColor: '#14B8A6',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Platform.OS === 'ios' ? 14 : 20,
+    marginBottom: Platform.OS === 'ios' ? 14 : 16,
     shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
