@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "JOEKAT FINACE",
+    "slug": "joekat-finace",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#001D39"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.joekat.finace",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "JOEKAT FINACE requiere autenticación biométrica para proteger tus finanzas familiares.",
+        "NSPhotoLibraryUsageDescription": "Permite adjuntar fotos de recibos a tus gastos."
+      }
+    },
+    "android": {
+      "package": "com.joekat.finace",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#001D39"
+      },
+      "permissions": [
+        "USE_BIOMETRIC",
+        "USE_FINGERPRINT",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-sharing",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Permitir acceso a Face ID para desbloquear JOEKAT FINACE."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Permitir a JOEKAT FINACE acceder a tus fotos para adjuntar recibos."
+        }
+      ]
+    ]
+  }
+}

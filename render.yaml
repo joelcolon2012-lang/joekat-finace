@@ -1,0 +1,10 @@
+﻿services:
+  - type: web
+    name: joekat-finace
+    env: node
+    plan: free
+    buildCommand: echo "Pre-built dist ready"
+    startCommand: node server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
