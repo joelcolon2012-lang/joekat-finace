@@ -129,14 +129,26 @@ export const RootNavigator: React.FC = () => {
         screenOptions={{
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: theme.tabBarBackground,
-            borderTopColor: theme.border,
+            backgroundColor: 'rgba(7, 24, 39, 0.92)',
+            borderTopColor: 'rgba(255, 255, 255, 0.12)',
+            borderTopWidth: 1,
             height: Platform.OS === 'ios' ? 86 : 68,
             paddingBottom: Platform.OS === 'ios' ? 24 : 10,
             paddingTop: 8,
+            ...(Platform.OS === 'web'
+              ? ({
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  position: 'fixed',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 100,
+                } as any)
+              : {}),
           },
-          tabBarActiveTintColor: theme.tabBarActive,
-          tabBarInactiveTintColor: theme.tabBarInactive,
+          tabBarActiveTintColor: '#14B8A6',
+          tabBarInactiveTintColor: 'rgba(248, 245, 236, 0.55)',
           tabBarLabelStyle: {
             fontSize: 11,
             fontWeight: '600',
@@ -147,6 +159,7 @@ export const RootNavigator: React.FC = () => {
           name="Inicio"
           component={DashboardStackNavigator}
           options={{
+            tabBarLabel: 'Inicio',
             tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
           }}
         />
@@ -156,16 +169,17 @@ export const RootNavigator: React.FC = () => {
           component={TransactionsScreen}
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: theme.headerBackground },
-            headerTintColor: theme.headerText,
-            headerTitle: 'Historial',
+            headerStyle: { backgroundColor: '#071827' },
+            headerTintColor: '#F8F5EC',
+            headerTitle: 'Historial de Movimientos',
+            tabBarLabel: 'Movimientos',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="receipt-outline" size={size} color={color} />
             ),
           }}
         />
 
-        {/* Botón Central Distintivo (+) */}
+        {/* Botón Central Flotante Universal (+) */}
         <Tab.Screen
           name="AddAction"
           component={View}
@@ -179,20 +193,21 @@ export const RootNavigator: React.FC = () => {
             tabBarLabel: '',
             tabBarIcon: () => (
               <View style={styles.floatingAddButton}>
-                <Ionicons name="add" size={32} color="#FFFFFF" />
+                <Ionicons name="add" size={32} color="#F8F5EC" />
               </View>
             ),
           }}
         />
 
         <Tab.Screen
-          name="Balance"
+          name="Analisis"
           component={BalanceAnalyticsScreen}
           options={{
             headerShown: true,
-            headerStyle: { backgroundColor: theme.headerBackground },
-            headerTintColor: theme.headerText,
-            headerTitle: 'Balance & Analítica',
+            headerStyle: { backgroundColor: '#071827' },
+            headerTintColor: '#F8F5EC',
+            headerTitle: 'Análisis Financiero',
+            tabBarLabel: 'Análisis',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="pie-chart-outline" size={size} color={color} />
             ),
@@ -200,11 +215,12 @@ export const RootNavigator: React.FC = () => {
         />
 
         <Tab.Screen
-          name="Más"
+          name="Perfil"
           component={MoreStackNavigator}
           options={{
+            tabBarLabel: 'Perfil',
             tabBarIcon: ({ color, size }) => (
-              <Ionicons name="grid-outline" size={size} color={color} />
+              <Ionicons name="person-circle-outline" size={size} color={color} />
             ),
           }}
         />
@@ -224,14 +240,16 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: BrandColors.deepBlue,
+    backgroundColor: '#0F766E',
+    borderWidth: 2,
+    borderColor: '#14B8A6',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Platform.OS === 'ios' ? 14 : 20,
-    shadowColor: BrandColors.nightBlue,
+    shadowColor: '#14B8A6',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 6,
+    shadowOpacity: 0.45,
+    shadowRadius: 10,
+    elevation: 8,
   },
 });

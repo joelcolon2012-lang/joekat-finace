@@ -19,6 +19,7 @@ import { CategoryDonutChart } from '../../components/charts/CategoryDonutChart';
 import { MonthlySavingsChart } from '../../components/charts/MonthlySavingsChart';
 import { MonthOverMonthComparisonChart } from '../../components/charts/MonthOverMonthComparisonChart';
 import { JKFinancialHealthCard } from '../../components/common/JKFinancialHealthCard';
+import { JoekatAIAssistant } from '../../components/common/JoekatAIAssistant';
 import { calculateMonthlyTotals, calculateCategoryBreakdown, getMonthComparisonText } from '../../utils/calculations';
 import { calculateFinancialHealth } from '../../utils/financialHealth';
 import { formatCurrency, roundCurrency } from '../../utils/currency';
@@ -300,6 +301,11 @@ export const BalanceAnalyticsScreen: React.FC = () => {
         {selectedMember === 'Familia' && (
           <JKFinancialHealthCard health={financialHealth} />
         )}
+
+        {/* Asistente JOEKAT AI - Respuestas Verídicas basadas en la BD */}
+        <View style={{ marginBottom: Spacing.md }}>
+          <JoekatAIAssistant />
+        </View>
 
         {/* GRÁFICO 1: Ingresos vs Gastos */}
         <JKChartCard

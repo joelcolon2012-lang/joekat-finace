@@ -154,15 +154,23 @@ export const BudgetsScreen: React.FC = () => {
 
           const percent = item.allocated_amount > 0 ? Math.round((spent / item.allocated_amount) * 100) : 0;
 
-          let statusLabel = 'Dentro del presupuesto';
+          // 4 Estados visuales exactos requeridos
+          let statusLabel = 'Normal';
           let statusVariant: BadgeVariant = 'success';
+          let progressColor = '#14B8A6'; // 0–70% normal verde financiero
 
-          if (percent >= 100) {
-            statusLabel = 'Presupuesto superado';
+          if (percent > 100) {
+            statusLabel = 'Excedido';
             statusVariant = 'danger';
-          } else if (percent >= 80) {
-            statusLabel = 'Cerca del límite';
+            progressColor = '#EF4444'; // >100% rojo
+          } else if (percent >= 90) {
+            statusLabel = 'Alerta';
+            statusVariant = 'danger';
+            progressColor = '#F97316'; // 90–100% naranja alerta
+          } else if (percent >= 70) {
+            statusLabel = 'Advertencia';
             statusVariant = 'warning';
+            progressColor = '#EAB308'; // 70–90% amarillo advertencia
           }
 
           return (
@@ -173,7 +181,7 @@ export const BudgetsScreen: React.FC = () => {
                 styles.budgetCard,
                 {
                   backgroundColor: theme.surfaceCard,
-                  borderColor: theme.border,
+                  borderColor: percent > 100 ? '#EF4444' : percent >= 90 ? '#F97316' : theme.border,
                 },
               ]}
             >
@@ -193,14 +201,14 @@ export const BudgetsScreen: React.FC = () => {
                 </View>
 
                 <View style={styles.percentBlock}>
-                  <Text style={[styles.percentNumber, { color: theme.textPrimary }]}>{percent}%</Text>
+                  <Text style={[styles.percentNumber, { color: progressColor }]}>{percent}%</Text>
                   <JKBadge label={statusLabel} variant={statusVariant} />
                 </View>
               </View>
 
-              {/* Barra de Progreso */}
+              {/* Barra de Progreso con 4 estados de color */}
               <View style={styles.progressContainer}>
-                <JKProgressBar progress={percent} height={9} />
+                <JKProgressBar progress={percent} height={9} color={progressColor} />
               </View>
 
               <View style={styles.cardBottomRow}>

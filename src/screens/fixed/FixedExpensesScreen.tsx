@@ -30,6 +30,7 @@ export const FixedExpensesScreen: React.FC = () => {
     fixedExpenses,
     categories,
     accounts,
+    transactions,
     addFixedExpense,
     updateFixedExpense,
     deleteFixedExpense,
@@ -46,10 +47,27 @@ export const FixedExpensesScreen: React.FC = () => {
   const [selectedAccountId, setSelectedAccountId] = useState(accounts[0]?.id || '');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
 
+  const now = new Date();
+  const currentMonth = now.getMonth() + 1;
+  const currentYear = now.getFullYear();
+
+  const monthIncome = transactions
+    .filter((t) => {
+      if (t.type !== 'income' || !t.date) return false;
+      const parts = t.date.split('-');
+      return parseInt(parts[0], 10) === currentYear && parseInt(parts[1], 10) === currentMonth;
+    })
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalAccountBalance = accounts.reduce((sum, a) => sum + (a.balance || 0), 0);
   const totalFixedAmount = fixedExpenses.reduce((sum, f) => sum + f.amount, 0);
   const pendingAmount = fixedExpenses
     .filter((f) => f.status !== 'paid')
     .reduce((sum, f) => sum + f.amount, 0);
+
+  // Dinero estimado disponible después de gastos fijos
+  const baseRevenue = monthIncome > 0 ? monthIncome : totalAccountBalance;
+  const availableAfterFixed = Math.max(0, baseRevenue - totalFixedAmount);
 
   const categoriesMap = categories.reduce((acc, c) => {
     acc[c.id] = c;
@@ -177,20 +195,32 @@ export const FixedExpensesScreen: React.FC = () => {
           />
         </View>
 
-        {/* Tarjeta de Resumen de Fijos */}
-        <View style={[styles.summaryCard, { backgroundColor: BrandColors.nightBlue }]}>
+        {/* Tarjeta de Resumen de Fijos con copy exacto requerido */}
+        <View style={[styles.summaryCard, { backgroundColor: '#071827', borderColor: 'rgba(255,255,255,0.12)', borderWidth: 1 }]}>
           <View style={styles.summaryCol}>
-            <Text style={styles.summaryLabel}>TOTAL COMPROMISOS</Text>
-            <Text style={styles.summaryValue}>{formatCurrency(totalFixedAmount, currency)}</Text>
+            <Text style={styles.summaryLabel}>GASTOS FIJOS DEL MES</Text>
+            <Text style={[styles.summaryValue, { color: '#F8F5EC' }]}>{formatCurrency(totalFixedAmount, currency)}</Text>
           </View>
           <View style={[styles.summaryDivider, { backgroundColor: 'rgba(255,255,255,0.15)' }]} />
           <View style={styles.summaryCol}>
-            <Text style={styles.summaryLabel}>POR PAGAR ESTE MES</Text>
-            <Text style={[styles.summaryValue, { color: pendingAmount > 0 ? BrandColors.skyBlue : BrandColors.success }]}>
-              {formatCurrency(pendingAmount, currency)}
+            <Text style={styles.summaryLabel}>DISPONIBLE TRAS FIJOS</Text>
+            <Text style={[styles.summaryValue, { color: '#14B8A6' }]}>
+              {formatCurrency(availableAfterFixed, currency)}
             </Text>
           </View>
         </View>
+
+        {/* Barra secundaria de pendientes */}
+        {pendingAmount > 0 ? (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, marginTop: 8 }}>
+            <Text style={{ fontSize: 12, color: theme.textSecondary }}>Compromisos pendientes por pagar este mes:</Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: '#F59E0B' }}>{formatCurrency(pendingAmount, currency)}</Text>
+          </View>
+        ) : (
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4, marginTop: 8 }}>
+            <Text style={{ fontSize: 12, color: '#14B8A6' }}>✓ Todos los gastos fijos del mes están al día</Text>
+          </View>
+        )}
       </View>
 
       {/* Lista de Gastos Fijos */}

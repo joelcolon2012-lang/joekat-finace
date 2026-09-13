@@ -31,8 +31,8 @@ export const TransactionsScreen: React.FC = () => {
   const { theme, currency } = useThemeStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPersonFilter, setSelectedPersonFilter] = useState<'Todos' | 'Joel' | 'Kath'>('Todos');
-  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'Todos' | 'expense' | 'income' | 'transfer'>('Todos');
+  const [selectedPersonFilter, setSelectedPersonFilter] = useState<'Todos' | 'Joel' | 'Kath' | 'Compartido'>('Todos');
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<'Todos' | 'expense' | 'income' | 'savings' | 'debt' | 'transfer'>('Todos');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('Todos');
 
   // Estado para el modal de acciones sobre un movimiento
@@ -60,9 +60,12 @@ export const TransactionsScreen: React.FC = () => {
     return sorted.filter((t) => {
       // Filtro de persona
       if (selectedPersonFilter === 'Kath') {
-        if (t.user_name !== 'Kath' && t.user_name !== 'Kat') return false;
+        if (t.owner !== 'kath' && t.user_name !== 'Kath' && t.user_name !== 'Kat') return false;
       } else if (selectedPersonFilter === 'Joel') {
-        if (t.user_name !== 'Joel') return false;
+        if (t.owner !== 'joel' && t.user_name !== 'Joel') return false;
+      } else if (selectedPersonFilter === 'Compartido') {
+        const isShared = t.owner === 'shared' || (!t.owner && t.user_name !== 'Joel' && t.user_name !== 'Kath' && t.user_name !== 'Kat');
+        if (!isShared) return false;
       }
       // Filtro de tipo
       if (selectedTypeFilter !== 'Todos' && t.type !== selectedTypeFilter) {
@@ -184,7 +187,7 @@ export const TransactionsScreen: React.FC = () => {
         <View style={styles.filterScroll}>
           {/* Persona */}
           <View style={styles.chipGroup}>
-            {(['Todos', 'Joel', 'Kath'] as const).map((p) => (
+            {(['Todos', 'Joel', 'Kath', 'Compartido'] as const).map((p) => (
               <TouchableOpacity
                 key={p}
                 onPress={() => setSelectedPersonFilter(p)}
@@ -210,7 +213,7 @@ export const TransactionsScreen: React.FC = () => {
 
           {/* Tipo */}
           <View style={styles.chipGroup}>
-            {(['Todos', 'expense', 'income', 'transfer'] as const).map((t) => (
+            {(['Todos', 'expense', 'income', 'savings', 'debt', 'transfer'] as const).map((t) => (
               <TouchableOpacity
                 key={t}
                 onPress={() => setSelectedTypeFilter(t)}
@@ -228,7 +231,17 @@ export const TransactionsScreen: React.FC = () => {
                       : { color: theme.textSecondary },
                   ]}
                 >
-                  {t === 'Todos' ? 'Todos' : t === 'expense' ? 'Gastos' : t === 'income' ? 'Ingresos' : 'Transferencias'}
+                  {t === 'Todos'
+                    ? 'Todos'
+                    : t === 'expense'
+                    ? 'Gastos'
+                    : t === 'income'
+                    ? 'Ingresos'
+                    : t === 'savings'
+                    ? 'Ahorros'
+                    : t === 'debt'
+                    ? 'Deudas'
+                    : 'Transferencias'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -258,6 +271,10 @@ export const TransactionsScreen: React.FC = () => {
                 onEdit={() => {
                   setEditingTx(tx);
                   setAddModalVisible(true);
+                }}
+                onDuplicate={() => {
+                  duplicateTransaction(tx.id);
+                  toast.success('✓ Movimiento duplicado');
                 }}
                 onDelete={() => confirmDelete(tx)}
                 onLongPress={() => handleOpenActions(tx)}

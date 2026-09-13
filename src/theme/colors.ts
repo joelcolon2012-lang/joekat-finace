@@ -1,61 +1,61 @@
-// =====================================================================
-// SISTEMA OFICIAL DE COLOR - JOEKAT FINACE
-// Basado rigurosamente en la paleta oficial e identidad del logotipo
+﻿// =====================================================================
+// SISTEMA DE COLOR - JOEKAT FINANCE FINTECH PREMIUM
+// Paleta: Verde Profundo, Verde Financiero, Azul Oscuro, Blanco Marfil
 // =====================================================================
 
 export const BrandColors = {
-  // Paleta oficial JOEKAT FINACE
-  nightBlue: '#001D39', // Azul noche profundo: encabezados, fondos oscuros, navegación
-  deepBlue: '#0A4174',  // Azul profundo: color principal de interacción
-  mediumBlue: '#49769F',// Azul medio: elementos secundarios y gráficos
-  petrolBlue: '#4E8EA2',// Azul petróleo claro: categorías secundarias
-  slateBlue: '#6EA2B3', // Azul grisáceo: información auxiliar y bordes
-  skyBlue: '#7BBDE8',   // Azul cielo: acentos, highlights e indicadores positivos
-  lightSky: '#BDD8E9',  // Azul muy claro: fondos secundarios, tarjetas y áreas suaves
+  // Paleta oficial JOEKAT FINANCE Fintech
+  nightBlue: '#071827',     // Azul oscuro principal
+  deepBlue: '#0F766E',      // Verde profundo principal (acciones, primario)
+  mediumBlue: '#102A43',    // Azul secundario (tarjetas, fondos alternos)
+  petrolBlue: '#14B8A6',    // Verde financiero secundario (acentos, highlights)
+  slateBlue: 'rgba(248, 245, 236, 0.75)', // Blanco translúcido para textos secundarios
+  skyBlue: '#14B8A6',       // Verde financiero (positivos, crecimiento)
+  lightSky: 'rgba(255, 255, 255, 0.08)',  // Glass translúcido
 
   // Colores complementarios
-  warmWhite: '#FBFBFD',
+  warmWhite: '#F8F5EC',     // Blanco marfil
   pureWhite: '#FFFFFF',
-  charcoal: '#0B1118',
-  softGrey: '#F1F5F9',
-  borderLight: '#E2E8F0',
-  borderDark: '#1E293B',
+  charcoal: '#071827',
+  softGrey: '#102A43',
+  borderLight: 'rgba(255, 255, 255, 0.12)',
+  borderDark: 'rgba(255, 255, 255, 0.12)',
 
   // Estados semánticos
-  success: '#10B981',
-  successLight: '#D1FAE5',
+  success: '#14B8A6',
+  successLight: 'rgba(20, 184, 166, 0.15)',
   warning: '#F59E0B',
-  warningLight: '#FEF3C7',
+  warningLight: 'rgba(245, 158, 11, 0.15)',
   danger: '#EF4444',
-  dangerLight: '#FEE2E2',
-  info: '#3B82F6',
+  dangerLight: 'rgba(239, 68, 68, 0.15)',
+  info: '#60A5FA',
 };
 
-// Paleta oficial e identidad visual para KATH (elegante, femenino, moderno y premium)
+// Identidad visual para KATH (verde esmeralda suave + marfil, sin rosa chillón)
 export const KathColors = {
-  dark: '#4A1830',       // Kath Dark: acentos oscuros y contraste
-  primary: '#8E3A62',    // Kath Primary: color principal de interacción de Kath
-  medium: '#B45B7D',     // Kath Medium: series intermedias y gráficos
-  soft: '#D98FA9',       // Kath Soft: bordes y chips suaves
-  light: '#F0B9CB',      // Kath Light: fondos activos
-  pale: '#F9DCE6',       // Kath Pale: chips y distintivos de movimiento
-  background: '#FFF4F7', // Kath Background: fondo exclusivo de Kath
-  surfaceCard: '#FFF0F5',
-  border: '#F3D2DF',
+  dark: '#071827',
+  primary: '#0F766E',
+  medium: '#14B8A6',
+  soft: 'rgba(20, 184, 166, 0.3)',
+  light: 'rgba(20, 184, 166, 0.15)',
+  pale: 'rgba(248, 245, 236, 0.12)',
+  background: '#071827',
+  surfaceCard: 'rgba(255, 255, 255, 0.08)',
+  border: 'rgba(20, 184, 166, 0.25)',
 };
 
-// Paleta oficial para JOEL (azul corporativo JOEKAT)
+// Identidad visual para JOEL (verde financiero + azul oscuro)
 export const JoelColors = {
-  dark: '#001D39',       // Joel Dark: noche profundo
-  primary: '#0A4174',    // Joel Primary: azul profundo
-  medium: '#49769F',     // Joel Medium: azul medio
-  petrol: '#4E8EA2',     // Joel Petrol: azul petróleo
-  slate: '#6EA2B3',      // Joel Slate: azul grisáceo
-  light: '#7BBDE8',      // Joel Light: azul cielo
-  pale: '#BDD8E9',       // Joel Pale: fondo suave
-  background: '#F0F6FA',
-  surfaceCard: '#FFFFFF',
-  border: '#D0E4F2',
+  dark: '#071827',
+  primary: '#14B8A6',
+  medium: '#0F766E',
+  petrol: '#102A43',
+  slate: 'rgba(248, 245, 236, 0.75)',
+  light: '#14B8A6',
+  pale: 'rgba(255, 255, 255, 0.08)',
+  background: '#071827',
+  surfaceCard: 'rgba(255, 255, 255, 0.08)',
+  border: 'rgba(255, 255, 255, 0.12)',
 };
 
 export interface ThemeColors {
@@ -83,52 +83,52 @@ export interface ThemeColors {
   statusRed: string;
 }
 
-export const LightTheme: ThemeColors = {
-  mode: 'light',
-  background: '#F8FAFC',
-  surface: '#FFFFFF',
-  surfaceCard: '#FFFFFF',
-  surfaceCardAlt: '#F0F6FA',
-  headerBackground: BrandColors.nightBlue,
-  headerText: '#FFFFFF',
-  textPrimary: '#001D39',
-  textSecondary: '#49769F',
-  textMuted: '#6EA2B3',
-  textInverse: '#FFFFFF',
-  accent: BrandColors.deepBlue,
-  accentLight: BrandColors.lightSky,
-  highlight: BrandColors.skyBlue,
-  border: '#E2E8F0',
-  borderFocus: BrandColors.deepBlue,
-  tabBarBackground: '#FFFFFF',
-  tabBarActive: BrandColors.deepBlue,
-  tabBarInactive: '#8E9AA8',
-  cardShadow: 'rgba(0, 29, 57, 0.05)',
-  statusGreen: BrandColors.success,
-  statusRed: BrandColors.danger,
-};
-
 export const DarkTheme: ThemeColors = {
   mode: 'dark',
-  background: BrandColors.nightBlue,
-  surface: '#072648',
-  surfaceCard: '#0A3159',
-  surfaceCardAlt: '#0E3D6E',
-  headerBackground: '#001428',
-  headerText: '#FFFFFF',
-  textPrimary: '#FBFBFD',
-  textSecondary: BrandColors.skyBlue,
-  textMuted: BrandColors.slateBlue,
-  textInverse: '#001D39',
-  accent: BrandColors.skyBlue,
-  accentLight: BrandColors.petrolBlue,
-  highlight: BrandColors.skyBlue,
-  border: '#173F68',
-  borderFocus: BrandColors.skyBlue,
-  tabBarBackground: '#041B33',
-  tabBarActive: BrandColors.skyBlue,
-  tabBarInactive: BrandColors.slateBlue,
-  cardShadow: 'rgba(0, 0, 0, 0.25)',
-  statusGreen: '#34D399',
+  background: '#071827',           // Azul oscuro principal
+  surface: '#102A43',              // Azul secundario
+  surfaceCard: 'rgba(255, 255, 255, 0.08)', // Glassmorphism
+  surfaceCardAlt: 'rgba(255, 255, 255, 0.04)',
+  headerBackground: '#071827',
+  headerText: '#F8F5EC',           // Blanco marfil
+  textPrimary: '#F8F5EC',          // Blanco marfil
+  textSecondary: 'rgba(248, 245, 236, 0.75)', // Blanco translúcido
+  textMuted: 'rgba(248, 245, 236, 0.50)',
+  textInverse: '#071827',
+  accent: '#14B8A6',               // Verde financiero
+  accentLight: '#0F766E',          // Verde profundo
+  highlight: '#14B8A6',
+  border: 'rgba(255, 255, 255, 0.12)',
+  borderFocus: '#14B8A6',
+  tabBarBackground: 'rgba(7, 24, 39, 0.88)',
+  tabBarActive: '#14B8A6',
+  tabBarInactive: 'rgba(248, 245, 236, 0.50)',
+  cardShadow: 'rgba(0, 0, 0, 0.28)',
+  statusGreen: '#14B8A6',
   statusRed: '#F87171',
+};
+
+export const LightTheme: ThemeColors = {
+  mode: 'light',
+  background: '#F8F5EC',           // Blanco marfil
+  surface: '#FFFFFF',
+  surfaceCard: '#FFFFFF',
+  surfaceCardAlt: 'rgba(15, 118, 110, 0.06)',
+  headerBackground: '#071827',
+  headerText: '#F8F5EC',
+  textPrimary: '#071827',          // Azul oscuro
+  textSecondary: '#102A43',
+  textMuted: '#64748B',
+  textInverse: '#F8F5EC',
+  accent: '#0F766E',               // Verde profundo
+  accentLight: '#14B8A6',
+  highlight: '#14B8A6',
+  border: 'rgba(7, 24, 39, 0.12)',
+  borderFocus: '#0F766E',
+  tabBarBackground: '#FFFFFF',
+  tabBarActive: '#0F766E',
+  tabBarInactive: '#94A3B8',
+  cardShadow: 'rgba(7, 24, 39, 0.08)',
+  statusGreen: '#0F766E',
+  statusRed: '#EF4444',
 };

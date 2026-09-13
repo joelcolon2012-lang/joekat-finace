@@ -41,14 +41,15 @@ export interface Account {
   is_active: boolean;
 }
 
-export type TransactionType = 'income' | 'expense' | 'transfer';
+export type TransactionType = 'income' | 'expense' | 'transfer' | 'savings' | 'debt';
+export type TransactionOwner = 'joel' | 'kath' | 'shared';
 export type RecurrenceFrequency = 'semanal' | 'quincenal' | 'mensual' | 'anual';
 
 export interface Category {
   id: string;
   household_id?: string;
   name: string;
-  type: 'income' | 'expense';
+  type: 'income' | 'expense' | 'savings' | 'debt';
   icon: string;
   color: string;
   is_system?: boolean;
@@ -59,6 +60,7 @@ export interface Transaction {
   household_id: string;
   user_id?: string;
   user_name: FamilyMemberName;
+  owner?: TransactionOwner;
   account_id?: string;
   destination_account_id?: string; // Para transferencias
   category_id?: string;
@@ -72,6 +74,7 @@ export interface Transaction {
   frequency?: RecurrenceFrequency;
   tags?: string[];
   created_at?: string;
+  updated_at?: string;
 }
 
 export type FixedExpenseStatus = 'paid' | 'pending' | 'upcoming';
@@ -85,6 +88,8 @@ export interface FixedExpense {
   frequency: string;
   category_id?: string;
   account_id?: string;
+  responsible?: FamilyMemberName;
+  owner?: TransactionOwner;
   status: FixedExpenseStatus;
   last_paid_at?: string;
 }

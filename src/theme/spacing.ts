@@ -1,5 +1,4 @@
-// Tokens de espaciado y radios de borde para JOEKAT FINACE
-
+﻿// Tokens de espaciado y radios de borde para JOEKAT FINANCE FINTECH
 export const Spacing = {
   xs: 4,
   sm: 8,
@@ -11,34 +10,34 @@ export const Spacing = {
 };
 
 export const BorderRadius = {
-  xs: 4,
-  sm: 8,
-  md: 14,
-  lg: 18,
-  xl: 24,
-  pill: 9999,
+  xs: 6,
+  sm: 10,
+  md: 14,      // Botones
+  lg: 18,      // Tarjetas estándar
+  xl: 24,      // Tarjetas principales / Dashboard
+  pill: 9999,  // Chips y botón flotante circular
 };
 
 export const Shadows = {
   subtle: {
-    shadowColor: '#001D39',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.12,
     shadowRadius: 6,
     elevation: 2,
   },
   card: {
-    shadowColor: '#001D39',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 3,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.22,
+    shadowRadius: 24,
+    elevation: 4,
   },
   elevated: {
-    shadowColor: '#001D39',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 32,
+    elevation: 8,
   },
 };

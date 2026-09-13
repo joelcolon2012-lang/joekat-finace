@@ -1,4 +1,8 @@
-// Pantalla principal / Dashboard de JOEKAT FINACE
+// =====================================================================
+// PANTALLA PRINCIPAL / DASHBOARD - JOEKAT FINANCE FINTECH PREMIUM
+// Paleta: Verde profundo, Verde financiero, Azul oscuro, Blanco marfil
+// Glassmorphism, Selector de Miembros (Joel/Kath/Compartido), Balance y Widgets
+// =====================================================================
 import React, { useState } from 'react';
 import {
   View,
@@ -9,25 +13,23 @@ import {
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFinanceStore } from '../../store/financeStore';
 import { useAuthStore } from '../../store/authStore';
-import { useThemeStore } from '../../store/themeStore';
-import { BrandColors, KathColors } from '../../theme/colors';
+import { Colors, Radius } from '../../theme/designTokens';
 import { JKBalanceCard } from '../../components/common/JKBalanceCard';
 import { JKTransactionCard } from '../../components/common/JKTransactionCard';
-import { JKFinancialHealthCard } from '../../components/common/JKFinancialHealthCard';
-import { JKAvatar } from '../../components/common/JKAvatar';
+import { UserSelector, FinancialScope } from '../../components/common/UserSelector';
 import { JKEmptyState } from '../../components/common/JKEmptyState';
-import { JKModal } from '../../components/common/JKModal';
 import { toast } from '../../components/common/JKToast';
 import { AddTransactionModal } from '../transactions/AddTransactionModal';
-import { getGreeting, formatMonthYear } from '../../utils/date';
+import { formatMonthYear, getTodayDateString } from '../../utils/date';
 import { calculateMonthlyTotals, getMonthComparisonText } from '../../utils/calculations';
-import { calculateFinancialHealth } from '../../utils/financialHealth';
 import { downloadMonthlyPdfReport, printMonthlyReport } from '../../services/pdfGenerator';
-import { Spacing, BorderRadius } from '../../theme/spacing';
+import { formatCurrency } from '../../utils/currency';
+import { Spacing } from '../../theme/spacing';
 import { Transaction } from '../../types';
 
 interface DashboardScreenProps {
@@ -42,54 +44,44 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     budgets,
     savingGoals,
     syncWithSupabase,
-    isLoading,
     syncStatus,
     deleteTransaction,
     restoreTransaction,
+    addTransaction,
   } = useFinanceStore();
-  const { activeMember, switchMember, household } = useAuthStore();
-  const { theme, currency } = useThemeStore();
+  const { activeMember, switchMember } = useAuthStore();
 
+  // Selector financiero: 'all' (Compartido) | 'joel' | 'kath'
+  const [financialScope, setFinancialScope] = useState<FinancialScope>('all');
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-  const [deletingTx, setDeletingTx] = useState<Transaction | null>(null);
-  const [initialTxType, setInitialTxType] = useState<'expense' | 'income'>('expense');
+  const [initialTxType, setInitialTxType] = useState<any>('expense');
   const [refreshing, setRefreshing] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
 
-  // Totales dinámicos del mes actual y mes anterior
+  // Fechas y periodo actual
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
   const currentYear = now.getFullYear();
   const prevMonth = currentMonth === 1 ? 12 : currentMonth - 1;
   const prevYear = currentMonth === 1 ? currentYear - 1 : currentYear;
 
-  const currentMonthTotals = calculateMonthlyTotals(transactions, currentMonth, currentYear);
-  const prevMonthTotals = calculateMonthlyTotals(transactions, prevMonth, prevYear);
-
-  const comparison = getMonthComparisonText(
-    currentMonthTotals.totalExpenses,
-    prevMonthTotals.totalExpenses
-  );
-
-  // Salud Financiera
-  const fixedTotal = fixedExpenses.reduce((sum, f) => sum + f.amount, 0);
-  const budgetsOverLimit = budgets.filter((b) => {
-    const spent = transactions
-      .filter((t) => t.type === 'expense' && t.category_id === b.category_id)
-      .reduce((sum, t) => sum + t.amount, 0);
-    return spent > b.allocated_amount;
-  }).length;
-
-  const financialHealth = calculateFinancialHealth({
-    totalIncome: currentMonthTotals.totalIncome,
-    totalExpenses: currentMonthTotals.totalExpenses,
-    savingsRate: currentMonthTotals.savingsRate,
-    fixedExpensesTotal: fixedTotal,
-    budgetsOverLimitCount: budgetsOverLimit,
-    totalBudgetsCount: budgets.length,
+  // Filtrado de transacciones según el selector financiero (Compartido / Joel / Kath)
+  const scopedTransactions = transactions.filter((t) => {
+    if (financialScope === 'all') return true;
+    if (financialScope === 'joel') return t.user_name === 'Joel' || t.owner === 'joel';
+    if (financialScope === 'kath') return t.user_name === 'Kath' || t.user_name === 'Kat' || t.owner === 'kath';
+    return true;
   });
+
+  const currentMonthTotals = calculateMonthlyTotals(scopedTransactions, currentMonth, currentYear);
+  const prevMonthTotals = calculateMonthlyTotals(scopedTransactions, prevMonth, prevYear);
+  const comparison = getMonthComparisonText(currentMonthTotals.totalExpenses, prevMonthTotals.totalExpenses);
+
+  // Gastos Fijos y Disponible Estimado
+  const totalFixedExpenses = fixedExpenses.reduce((sum, f) => sum + f.amount, 0);
+  const estimatedFreeAfterFixed = Math.max(0, currentMonthTotals.netBalance - totalFixedExpenses);
 
   const categoriesMap = categories.reduce((acc, c) => {
     acc[c.id] = c;
@@ -108,15 +100,15 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       await downloadMonthlyPdfReport({
         month: currentMonth,
         year: currentYear,
-        transactions,
+        transactions: scopedTransactions,
         budgets,
         categories,
         savingGoals,
-        currency,
+        currency: 'DOP',
       });
       toast.success('Reporte PDF descargado con éxito');
     } catch (err: any) {
-      toast.error('Error al descargar reporte PDF: ' + (err?.message || 'Error'));
+      toast.error('Error al descargar reporte: ' + (err?.message || 'Error'));
     } finally {
       setIsDownloadingPdf(false);
     }
@@ -128,11 +120,11 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
       await printMonthlyReport({
         month: currentMonth,
         year: currentYear,
-        transactions,
+        transactions: scopedTransactions,
         budgets,
         categories,
         savingGoals,
-        currency,
+        currency: 'DOP',
       });
       toast.success('Reporte enviado a la impresora');
     } catch (err: any) {
@@ -142,181 +134,103 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     }
   };
 
-  const recentTransactions = transactions.slice(0, 5);
-  const isKath = activeMember === 'Kath' || activeMember === 'Kat';
+  const handleDuplicateTx = async (tx: Transaction) => {
+    try {
+      await addTransaction({
+        household_id: tx.household_id || 'hh-joel-kat-01',
+        type: tx.type,
+        amount: tx.amount,
+        user_name: tx.user_name,
+        owner: tx.owner,
+        category_id: tx.category_id,
+        account_id: tx.account_id,
+        description: tx.description ? `${tx.description} (Copia)` : 'Movimiento duplicado',
+        date: getTodayDateString(),
+      });
+      toast.success('Movimiento duplicado con éxito');
+    } catch {
+      toast.error('No se pudo duplicar el movimiento');
+    }
+  };
+
+  const handleDeleteTx = (tx: Transaction) => {
+    deleteTransaction(tx.id);
+    toast.undo('Movimiento eliminado', () => {
+      restoreTransaction(tx);
+    });
+  };
+
+  const recentTransactions = scopedTransactions.slice(0, 5);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
-      {/* Barra superior con identidad, indicador en vivo y switch de Joel/Kath */}
-      <View style={[styles.topBar, { backgroundColor: theme.background, borderColor: theme.border }]}>
-        <View style={styles.brandTitleRow}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={[styles.brandTitle, { color: theme.textPrimary }]}>joekat finace</Text>
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                marginLeft: 8,
-                backgroundColor: syncStatus === 'connected' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
-                paddingHorizontal: 6,
-                paddingVertical: 2,
-                borderRadius: 10,
-              }}
-            >
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: syncStatus === 'connected' ? '#10B981' : '#F59E0B',
-                  marginRight: 4,
-                }}
-              />
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontWeight: '700',
-                  color: syncStatus === 'connected' ? '#10B981' : '#F59E0B',
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.5,
-                }}
-              >
-                {syncStatus === 'connected' ? 'En Vivo' : 'Conectando'}
-              </Text>
-            </View>
-          </View>
-          <Text style={[styles.householdName, { color: theme.textSecondary }]}>
-            {household?.name || 'Hogar Joel & Kath'}
-          </Text>
-        </View>
-
-        {/* Conmutador rápido de miembro activo (Joel / Kath) */}
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={() => switchMember(activeMember === 'Joel' ? 'Kath' : 'Joel')}
-          style={[
-            styles.memberSwitchPill,
-            {
-              backgroundColor: isKath ? KathColors.pale : theme.surfaceCard,
-              borderColor: isKath ? KathColors.border : theme.border,
-            },
-          ]}
-        >
-          <JKAvatar name={activeMember} size={28} showBadge={true} />
-          <View style={styles.memberSwitchTextCol}>
-            <Text style={[styles.memberSwitchLabel, { color: isKath ? KathColors.primary : theme.textMuted }]}>
-              Activo
-            </Text>
-            <Text style={[styles.memberSwitchName, { color: isKath ? KathColors.primary : theme.textPrimary }]}>
-              {activeMember}
-            </Text>
-          </View>
-          <Ionicons
-            name="swap-vertical"
-            size={14}
-            color={isKath ? KathColors.primary : BrandColors.deepBlue}
-            style={{ marginLeft: 4 }}
-          />
-        </TouchableOpacity>
-      </View>
-
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor={Colors.secondaryGreen} />
+        }
       >
-        {/* Tarjeta Hero de Balance */}
+        {/* 1. Selector Financiero: JOEL | KATH | COMPARTIDO */}
+        <View style={styles.selectorWrapper}>
+          <UserSelector
+            selected={financialScope}
+            onSelect={(scope) => {
+              setFinancialScope(scope);
+              if (scope === 'joel') switchMember('Joel');
+              else if (scope === 'kath') switchMember('Kath');
+            }}
+          />
+        </View>
+
+        {/* 2. Tarjeta Hero de Balance con los 4 Indicadores Clave */}
         <JKBalanceCard
-          greeting={getGreeting(activeMember)}
           periodLabel={formatMonthYear()}
           availableBalance={currentMonthTotals.netBalance}
           totalIncome={currentMonthTotals.totalIncome}
           totalExpenses={currentMonthTotals.totalExpenses}
           monthlySavings={currentMonthTotals.monthlySavings}
+          savingsRate={currentMonthTotals.savingsRate}
+          comparisonPercentage={comparison.percentage}
           comparisonText={comparison.text}
           isComparisonPositive={comparison.isPositive}
+          onPressPeriod={() => navigation.navigate('Balance')}
         />
 
-        {/* Botones de Acción Rápida (1 Toque) */}
-        <View style={styles.quickActionsRow}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              setInitialTxType('expense');
-              setAddModalVisible(true);
-            }}
-            style={[styles.quickActionBtn, { backgroundColor: BrandColors.nightBlue }]}
-          >
-            <Ionicons name="arrow-down-circle" size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>+ Gasto</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => {
-              setInitialTxType('income');
-              setAddModalVisible(true);
-            }}
-            style={[styles.quickActionBtn, { backgroundColor: BrandColors.deepBlue }]}
-          >
-            <Ionicons name="arrow-up-circle" size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>+ Ingreso</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('FixedExpenses')}
-            style={[styles.quickActionBtn, { backgroundColor: BrandColors.petrolBlue }]}
-          >
-            <Ionicons name="calendar-outline" size={20} color="#FFFFFF" />
-            <Text style={styles.quickActionText}>Fijos</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={() => navigation.navigate('SavingGoals')}
-            style={[styles.quickActionBtn, { backgroundColor: BrandColors.skyBlue }]}
-          >
-            <Ionicons name="flag-outline" size={20} color={BrandColors.nightBlue} />
-            <Text style={[styles.quickActionText, { color: BrandColors.nightBlue }]}>Metas</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Reporte Financiero Mensual con botones separados de Descarga PDF e Impresión */}
+        {/* 3. Acciones de Reporte Ejecutivo: Descargar PDF e Imprimir */}
         <View style={styles.sectionContainer}>
           <View
             style={[
-              styles.pdfDownloadBanner,
-              { backgroundColor: theme.surfaceCard, borderColor: BrandColors.lightSky },
+              styles.pdfCard,
+              Platform.OS === 'web' ? ({
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+              } as any) : null,
             ]}
           >
-            <View style={styles.pdfBannerHeader}>
-              <View style={[styles.pdfIconContainer, { backgroundColor: BrandColors.lightSky }]}>
-                <Ionicons name="document-text" size={22} color={BrandColors.deepBlue} />
+            <View style={styles.pdfCardHeader}>
+              <View style={styles.pdfIconCircle}>
+                <Ionicons name="document-text" size={20} color={Colors.secondaryGreen} />
               </View>
-              <View style={{ flex: 1, marginLeft: 12 }}>
-                <Text style={[styles.pdfBannerTitle, { color: theme.textPrimary }]}>
-                  Reporte Financiero Mensual
-                </Text>
-                <Text style={[styles.pdfBannerSub, { color: theme.textSecondary }]}>
-                  Documento ejecutivo de {formatMonthYear()}
-                </Text>
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={styles.pdfTitle}>Reporte Financiero Mensual</Text>
+                <Text style={styles.pdfSubtitle}>Documento ejecutivo formal de {formatMonthYear()}</Text>
               </View>
             </View>
 
-            <View style={styles.pdfActionButtonsRow}>
+            <View style={styles.pdfButtonsRow}>
               <TouchableOpacity
                 activeOpacity={0.85}
                 onPress={handleDownloadPdf}
                 disabled={isDownloadingPdf || isPrinting}
-                style={[styles.pdfActionBtn, { backgroundColor: BrandColors.deepBlue }]}
+                style={[styles.pdfBtn, styles.pdfBtnPrimary]}
               >
                 {isDownloadingPdf ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
+                  <ActivityIndicator size="small" color={Colors.darkNavy} />
                 ) : (
                   <>
-                    <Ionicons name="cloud-download-outline" size={16} color="#FFFFFF" />
-                    <Text style={styles.pdfActionBtnText}>Descargar PDF</Text>
+                    <Ionicons name="cloud-download-outline" size={16} color={Colors.darkNavy} />
+                    <Text style={styles.pdfBtnPrimaryText}>Descargar PDF</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -325,23 +239,14 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                 activeOpacity={0.85}
                 onPress={handlePrintReport}
                 disabled={isDownloadingPdf || isPrinting}
-                style={[
-                  styles.pdfActionBtn,
-                  {
-                    backgroundColor: BrandColors.softGrey,
-                    borderColor: BrandColors.lightSky,
-                    borderWidth: 1,
-                  },
-                ]}
+                style={[styles.pdfBtn, styles.pdfBtnOutline]}
               >
                 {isPrinting ? (
-                  <ActivityIndicator size="small" color={BrandColors.deepBlue} />
+                  <ActivityIndicator size="small" color={Colors.ivoryWhite} />
                 ) : (
                   <>
-                    <Ionicons name="print-outline" size={16} color={BrandColors.deepBlue} />
-                    <Text style={[styles.pdfActionBtnText, { color: BrandColors.deepBlue }]}>
-                      Imprimir
-                    </Text>
+                    <Ionicons name="print-outline" size={16} color={Colors.ivoryWhite} />
+                    <Text style={styles.pdfBtnOutlineText}>Imprimir</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -349,22 +254,96 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
           </View>
         </View>
 
-        {/* Tarjeta de Salud Financiera */}
+        {/* 4. Widget de Gastos Fijos y Dinero Estimado Disponible */}
         <View style={styles.sectionContainer}>
-          <JKFinancialHealthCard
-            health={financialHealth}
-            onPressDetails={() => navigation.navigate('Balance')}
-          />
+          <View
+            style={[
+              styles.fixedSummaryCard,
+              Platform.OS === 'web' ? ({
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+              } as any) : null,
+            ]}
+          >
+            <View style={styles.widgetHeaderRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={[styles.miniDot, { backgroundColor: Colors.secondaryGreen }]} />
+                <Text style={styles.widgetTitle}>Gastos Fijos del Mes</Text>
+              </View>
+              <TouchableOpacity onPress={() => navigation.navigate('FixedExpenses')}>
+                <Text style={styles.widgetLink}>Ver fijos</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.fixedMetricsRow}>
+              <View style={styles.fixedMetricCol}>
+                <Text style={styles.metricLabel}>COMPROMISOS FIJOS</Text>
+                <Text style={styles.metricValue}>{formatCurrency(totalFixedExpenses, 'DOP')}</Text>
+              </View>
+              <View style={styles.metricDivider} />
+              <View style={styles.fixedMetricCol}>
+                <Text style={styles.metricLabel}>DISPONIBLE TRAS FIJOS</Text>
+                <Text style={[styles.metricValue, { color: Colors.secondaryGreen }]}>
+                  {formatCurrency(estimatedFreeAfterFixed, 'DOP')}
+                </Text>
+              </View>
+            </View>
+          </View>
         </View>
 
-        {/* Movimientos Recientes */}
+        {/* 5. Widget de Metas de Ahorro Prioritarias */}
+        {savingGoals.length > 0 ? (
+          <View style={styles.sectionContainer}>
+            <View
+              style={[
+                styles.goalsPreviewCard,
+                Platform.OS === 'web' ? ({
+                  backdropFilter: 'blur(16px)',
+                  WebkitBackdropFilter: 'blur(16px)',
+                } as any) : null,
+              ]}
+            >
+              <View style={styles.widgetHeaderRow}>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Ionicons name="flag" size={16} color={Colors.secondaryGreen} style={{ marginRight: 6 }} />
+                  <Text style={styles.widgetTitle}>Metas Prioritarias</Text>
+                </View>
+                <TouchableOpacity onPress={() => navigation.navigate('SavingGoals')}>
+                  <Text style={styles.widgetLink}>Ver todas</Text>
+                </TouchableOpacity>
+              </View>
+
+              {savingGoals.slice(0, 3).map((goal, idx) => {
+                const pct = Math.min(100, Math.round((goal.current_amount / (goal.target_amount || 1)) * 100));
+                return (
+                  <View key={goal.id} style={styles.goalItemRow}>
+                    <View style={styles.goalItemHeader}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                        <Text style={styles.goalPriority}>#{goal.priority || idx + 1}</Text>
+                        <Text style={styles.goalName}>{goal.name}</Text>
+                      </View>
+                      <Text style={styles.goalPercentage}>{pct}%</Text>
+                    </View>
+                    <View style={styles.progressBarTrack}>
+                      <View style={[styles.progressBarFill, { width: `${pct}%` }]} />
+                    </View>
+                    <View style={styles.goalAmountsRow}>
+                      <Text style={styles.goalSaved}>{formatCurrency(goal.current_amount, 'DOP')}</Text>
+                      <Text style={styles.goalTarget}>de {formatCurrency(goal.target_amount, 'DOP')}</Text>
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        ) : null}
+
+        {/* 6. Movimientos Recientes con Acciones */}
         <View style={styles.sectionContainer}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>
-              Movimientos Recientes
-            </Text>
+          <View style={styles.widgetHeaderRow}>
+            <Text style={styles.sectionMainTitle}>Movimientos Recientes</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Movimientos')}>
-              <Text style={[styles.seeAllText, { color: BrandColors.deepBlue }]}>Ver todos</Text>
+              <Text style={styles.widgetLink}>Ver todos</Text>
             </TouchableOpacity>
           </View>
 
@@ -374,22 +353,19 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                 key={tx.id}
                 transaction={tx}
                 category={categoriesMap[tx.category_id || '']}
-                onPress={() => {
-                  setEditingTx(tx);
-                  setAddModalVisible(true);
-                }}
                 onEdit={() => {
                   setEditingTx(tx);
                   setAddModalVisible(true);
                 }}
-                onDelete={() => setDeletingTx(tx)}
+                onDuplicate={() => handleDuplicateTx(tx)}
+                onDelete={() => handleDeleteTx(tx)}
               />
             ))
           ) : (
             <JKEmptyState
               title="Aún no hay movimientos este mes"
-              description="Comiencen registrando el primer gasto o ingreso familiar."
-              actionLabel="+ Añadir primer movimiento"
+              description="Toca el botón (+) central para registrar tu primer gasto o ingreso familiar."
+              actionLabel="Registrar primer movimiento"
               onAction={() => {
                 setEditingTx(null);
                 setInitialTxType('expense');
@@ -400,7 +376,7 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         </View>
       </ScrollView>
 
-      {/* Modal Rápido de Movimiento */}
+      {/* Modal de edición / adición rápida */}
       <AddTransactionModal
         visible={addModalVisible}
         onClose={() => {
@@ -410,65 +386,6 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
         initialType={initialTxType}
         initialTransaction={editingTx}
       />
-
-      {/* Modal de Confirmación para Eliminar Movimiento */}
-      <JKModal
-        visible={!!deletingTx}
-        onClose={() => setDeletingTx(null)}
-        title="¿Eliminar movimiento?"
-      >
-        {deletingTx && (
-          <View style={{ paddingTop: 4 }}>
-            <Text style={{ fontSize: 15, color: theme.textSecondary, marginBottom: 16, lineHeight: 22 }}>
-              ¿Deseas eliminar este movimiento de{' '}
-              <Text style={{ fontWeight: '700', color: theme.textPrimary }}>
-                {deletingTx.description || categoriesMap[deletingTx.category_id || '']?.name || 'Movimiento'}
-              </Text>{' '}
-              por{' '}
-              <Text style={{ fontWeight: '800', color: BrandColors.nightBlue }}>
-                RD$ {deletingTx.amount.toLocaleString()}
-              </Text>
-              ?
-            </Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <TouchableOpacity
-                onPress={() => setDeletingTx(null)}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: BorderRadius.md,
-                  borderWidth: 1,
-                  borderColor: theme.border,
-                  alignItems: 'center',
-                  backgroundColor: theme.surface,
-                }}
-              >
-                <Text style={{ fontWeight: '600', color: theme.textSecondary, fontSize: 14 }}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => {
-                  if (!deletingTx) return;
-                  const copy = { ...deletingTx };
-                  deleteTransaction(deletingTx.id);
-                  setDeletingTx(null);
-                  toast.undo('Movimiento eliminado', () => {
-                    restoreTransaction(copy);
-                  });
-                }}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderRadius: BorderRadius.md,
-                  backgroundColor: BrandColors.danger,
-                  alignItems: 'center',
-                }}
-              >
-                <Text style={{ fontWeight: '700', color: '#FFFFFF', fontSize: 14 }}>Eliminar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </JKModal>
     </SafeAreaView>
   );
 };
@@ -476,142 +393,202 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-  },
-  topBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-  },
-  brandTitleRow: {
-    justifyContent: 'center',
-  },
-  brandTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-  householdName: {
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 1,
-  },
-  memberSwitchPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-  },
-  memberSwitchTextCol: {
-    marginHorizontal: 6,
-  },
-  memberSwitchLabel: {
-    fontSize: 9,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  memberSwitchName: {
-    fontSize: 12,
-    fontWeight: '700',
+    backgroundColor: Colors.darkNavy,
   },
   scrollContent: {
-    paddingBottom: 90,
+    paddingBottom: Platform.OS === 'ios' ? 100 : 90,
   },
-  quickActionsRow: {
-    flexDirection: 'row',
+  selectorWrapper: {
     paddingHorizontal: Spacing.md,
-    gap: 8,
-    marginBottom: Spacing.sm,
-  },
-  quickActionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    borderRadius: BorderRadius.md,
-    gap: 5,
-  },
-  quickActionText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '700',
+    paddingTop: 10,
+    paddingBottom: 4,
   },
   sectionContainer: {
     paddingHorizontal: Spacing.md,
-    marginVertical: Spacing.xs,
+    marginTop: Spacing.sm,
   },
-  sectionHeader: {
+  widgetHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.xs,
-    marginTop: Spacing.sm,
+    marginBottom: 10,
   },
-  sectionTitle: {
-    fontSize: 17,
+  widgetTitle: {
+    fontSize: 15,
     fontWeight: '700',
-    letterSpacing: -0.2,
+    color: Colors.ivoryWhite,
   },
-  seeAllText: {
-    fontSize: 13,
-    fontWeight: '600',
+  sectionMainTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: Colors.ivoryWhite,
+    letterSpacing: -0.3,
   },
-  pdfDownloadBanner: {
-    padding: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    borderWidth: 1.5,
-    marginBottom: Spacing.sm,
-    shadowColor: '#001D39',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    elevation: 2,
+  widgetLink: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.secondaryGreen,
   },
-  pdfBannerHeader: {
+  miniDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
+  },
+  pdfCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: Radius.xl,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  pdfCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  pdfIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+  pdfIconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(20, 184, 166, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pdfBannerTitle: {
-    fontSize: 15,
+  pdfTitle: {
+    fontSize: 14,
     fontWeight: '700',
-    letterSpacing: -0.2,
+    color: Colors.ivoryWhite,
   },
-  pdfBannerSub: {
-    fontSize: 12,
-    fontWeight: '500',
+  pdfSubtitle: {
+    fontSize: 11,
+    color: Colors.ivoryTranslucent,
     marginTop: 2,
   },
-  pdfActionButtonsRow: {
+  pdfButtonsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 10,
   },
-  pdfActionBtn: {
+  pdfBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: BorderRadius.md,
+    paddingVertical: 9,
+    borderRadius: Radius.md,
     gap: 6,
   },
-  pdfActionBtnText: {
-    color: '#FFFFFF',
+  pdfBtnPrimary: {
+    backgroundColor: Colors.secondaryGreen,
+  },
+  pdfBtnPrimaryText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.darkNavy,
+  },
+  pdfBtnOutline: {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+  },
+  pdfBtnOutlineText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.ivoryWhite,
+  },
+  fixedSummaryCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: Radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  fixedMetricsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  fixedMetricCol: {
+    flex: 1,
+  },
+  metricLabel: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.ivoryTranslucent,
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: Colors.ivoryWhite,
+  },
+  metricDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    marginHorizontal: 12,
+  },
+  goalsPreviewCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: Radius.xl,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  goalItemRow: {
+    marginBottom: 12,
+  },
+  goalItemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5,
+  },
+  goalPriority: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: Colors.secondaryGreen,
+    marginRight: 6,
+  },
+  goalName: {
     fontSize: 13,
     fontWeight: '700',
+    color: Colors.ivoryWhite,
+  },
+  goalPercentage: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: Colors.secondaryGreen,
+  },
+  progressBarTrack: {
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    overflow: 'hidden',
+    marginBottom: 4,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: Colors.secondaryGreen,
+  },
+  goalAmountsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  goalSaved: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: Colors.ivoryWhite,
+  },
+  goalTarget: {
+    fontSize: 11,
+    color: Colors.ivoryMuted,
   },
 });

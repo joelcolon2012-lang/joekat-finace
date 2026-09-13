@@ -1,40 +1,38 @@
-// Modal rápido para añadir transacciones (Ingreso, Gasto, Transferencia, Ahorro)
-import React, { useState } from 'react';
+// =====================================================================
+// MODAL UNIVERSAL (+) FINTECH - REGISTRO RÁPIDO DE MOVIMIENTO
+// Soporta: + Ingreso, − Gasto, ↔ Transferencia, ◎ Ahorro, ▣ Deuda
+// Responsable: Joel | Kath | Compartido
+// =====================================================================
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
-  Image,
-  Alert,
+  Modal,
   KeyboardAvoidingView,
   Platform,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import { useFinanceStore } from '../../store/financeStore';
 import { useAuthStore } from '../../store/authStore';
-import { useThemeStore } from '../../store/themeStore';
-import { BrandColors, KathColors, JoelColors } from '../../theme/colors';
-import { Transaction, TransactionType, RecurrenceFrequency, FamilyMemberName } from '../../types';
-import { JKAmountInput } from '../../components/common/JKAmountInput';
-import { JKInput } from '../../components/common/JKInput';
-import { JKButton } from '../../components/common/JKButton';
-import { JKAvatar } from '../../components/common/JKAvatar';
+import { Colors, Radius } from '../../theme/designTokens';
+import { Transaction, TransactionType, FamilyMemberName, TransactionOwner } from '../../types';
 import { toast } from '../../components/common/JKToast';
-import { BorderRadius, Spacing } from '../../theme/spacing';
+import { parseAmount, formatCurrency } from '../../utils/currency';
 import { getTodayDateString } from '../../utils/date';
+import { Spacing } from '../../theme/spacing';
 
-interface AddTransactionModalProps {
+interface UniversalAddModalProps {
   visible: boolean;
   onClose: () => void;
   initialType?: TransactionType;
   initialTransaction?: Transaction | null;
 }
 
-export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
+export const AddTransactionModal: React.FC<UniversalAddModalProps> = ({
   visible,
   onClose,
   initialType = 'expense',
@@ -46,13 +44,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     savingGoals,
     addTransaction,
     updateTransaction,
-    deleteTransaction,
-    restoreTransaction,
     transferBetweenAccounts,
     depositToGoal,
   } = useFinanceStore();
   const { activeMember } = useAuthStore();
-  const { theme, currency } = useThemeStore();
 
   const isEditing = !!initialTransaction;
 
@@ -69,16 +64,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [selectedGoalId, setSelectedGoalId] = useState(savingGoals[0]?.id || '');
   const [description, setDescription] = useState(initialTransaction?.description || '');
   const [date, setDate] = useState(initialTransaction?.date || getTodayDateString());
-  const [paymentMethod, setPaymentMethod] = useState(initialTransaction?.payment_method || 'Tarjeta de Débito');
-  const [isRecurring, setIsRecurring] = useState(!!initialTransaction?.is_recurring);
-  const [frequency, setFrequency] = useState<RecurrenceFrequency>(initialTransaction?.frequency || 'mensual');
-  const [receiptImage, setReceiptImage] = useState<string | null>(initialTransaction?.receipt_url || null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const prevVisibleRef = React.useRef(visible);
-  const prevTxIdRef = React.useRef<string | undefined>(initialTransaction?.id);
+  const prevVisibleRef = useRef(visible);
+  const prevTxIdRef = useRef<string | undefined>(initialTransaction?.id);
 
-  // Sincronizar estado únicamente al abrir el modal o al cambiar la transacción
-  React.useEffect(() => {
+  useEffect(() => {
     const isOpening = visible && !prevVisibleRef.current;
     const isTxChanged = initialTransaction?.id !== prevTxIdRef.current;
 
@@ -92,717 +83,588 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         setDestinationAccountId(initialTransaction.destination_account_id || accounts[1]?.id || '');
         setDescription(initialTransaction.description || '');
         setDate(initialTransaction.date || getTodayDateString());
-        setPaymentMethod(initialTransaction.payment_method || 'Tarjeta de Débito');
-        setIsRecurring(!!initialTransaction.is_recurring);
-        setFrequency(initialTransaction.frequency || 'mensual');
-        setReceiptImage(initialTransaction.receipt_url || null);
       } else {
-        const defaultType = initialType || 'expense';
-        setType(defaultType);
+        setType(initialType || 'expense');
         setAmount('');
-        setSelectedPerson(activeMember || 'Joel');
+        setSelectedPerson(activeMember === 'Kath' || activeMember === 'Kat' ? 'Kath' : 'Joel');
+        setSelectedCategoryId('');
         setSelectedAccountId(accounts[0]?.id || '');
         setDestinationAccountId(accounts[1]?.id || '');
-        const relCats = categories.filter((c) => c.type === (defaultType === 'income' ? 'income' : 'expense'));
-        setSelectedCategoryId(relCats[0]?.id || '');
+        setSelectedGoalId(savingGoals[0]?.id || '');
         setDescription('');
         setDate(getTodayDateString());
-        setPaymentMethod('Tarjeta de Débito');
-        setIsRecurring(false);
-        setReceiptImage(null);
       }
     }
-
     prevVisibleRef.current = visible;
     prevTxIdRef.current = initialTransaction?.id;
-  }, [visible, initialTransaction, initialType, activeMember]);
+  }, [visible, initialTransaction, initialType, activeMember, accounts, savingGoals]);
 
-  // Filtrar categorías según tipo actual
-  const relevantCategories = categories.filter((c) => c.type === (type === 'income' ? 'income' : 'expense'));
-
-  const handleTypeChange = (newType: TransactionType) => {
-    setType(newType);
-    if (newType !== 'transfer') {
-      const newRelevant = categories.filter((c) => c.type === (newType === 'income' ? 'income' : 'expense'));
-      if (newRelevant.length > 0 && !newRelevant.find((c) => c.id === selectedCategoryId)) {
-        setSelectedCategoryId(newRelevant[0].id);
-      }
+  // Selección automática de primera categoría adecuada
+  useEffect(() => {
+    if (!selectedCategoryId && categories.length > 0) {
+      const match = categories.find((c) => c.type === (type === 'income' ? 'income' : 'expense'));
+      if (match) setSelectedCategoryId(match.id);
     }
-  };
+  }, [type, categories, selectedCategoryId]);
 
-  if (!visible) return null;
+  const handleSubmit = async () => {
+    const parsed = parseAmount(amount);
+    if (!parsed || parsed <= 0) {
+      toast.error('Por favor ingresa un monto válido mayor a cero');
+      return;
+    }
 
-  const handlePickReceipt = async () => {
+    // Mapeo de responsable
+    let owner: TransactionOwner = 'shared';
+    if (selectedPerson === 'Joel') owner = 'joel';
+    else if (selectedPerson === 'Kath' || selectedPerson === 'Kat') owner = 'kath';
+    else owner = 'shared';
+
+    setIsSubmitting(true);
     try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        quality: 0.6,
-      });
-
-      if (!result.canceled && result.assets[0]?.uri) {
-        setReceiptImage(result.assets[0].uri);
-      }
-    } catch {
-      Alert.alert('Error', 'No se pudo cargar la imagen del recibo.');
-    }
-  };
-
-  const handleDeleteTransaction = () => {
-    if (!initialTransaction) return;
-    const copy = { ...initialTransaction };
-    deleteTransaction(initialTransaction.id);
-    onClose();
-    toast.undo('Movimiento eliminado', () => {
-      restoreTransaction(copy);
-    });
-  };
-
-  const handleSave = () => {
-    const cleanAmount = amount.toString().replace(/,/g, '.').replace(/[^0-9.]/g, '');
-    const numAmount = parseFloat(cleanAmount);
-    if (isNaN(numAmount) || numAmount <= 0) {
-      toast.show('Por favor ingresa un monto válido mayor a 0.', { type: 'danger' });
-      return;
-    }
-
-    if (isEditing && initialTransaction) {
-      if (type === 'transfer' && selectedAccountId === destinationAccountId) {
-        toast.show('Selecciona dos cuentas diferentes para la transferencia.', { type: 'danger' });
+      if (type === 'transfer') {
+        if (!selectedAccountId || !destinationAccountId) {
+          toast.error('Selecciona la cuenta de origen y de destino');
+          setIsSubmitting(false);
+          return;
+        }
+        if (selectedAccountId === destinationAccountId) {
+          toast.error('La cuenta de origen y destino deben ser diferentes');
+          setIsSubmitting(false);
+          return;
+        }
+        await transferBetweenAccounts(
+          selectedAccountId,
+          destinationAccountId,
+          parsed,
+          description || 'Transferencia entre cuentas',
+          selectedPerson
+        );
+        toast.success(`Transferencia de ${formatCurrency(parsed, 'DOP')} realizada`);
+        onClose();
         return;
       }
-      updateTransaction(initialTransaction.id, {
-        household_id: initialTransaction.household_id || 'hh-joel-kat-01',
-        user_name: selectedPerson,
-        type,
-        amount: numAmount,
-        category_id: type === 'transfer' ? undefined : (selectedCategoryId || undefined),
-        account_id: selectedAccountId,
-        destination_account_id: type === 'transfer' ? destinationAccountId : undefined,
-        date,
-        description: description.trim() || undefined,
-        payment_method: paymentMethod,
-        is_recurring: isRecurring,
-        frequency: isRecurring ? frequency : undefined,
-        receipt_url: receiptImage || undefined,
-      });
-      toast.success('✓ Cambios guardados');
+
+      if (type === 'savings') {
+        if (selectedGoalId) {
+          await depositToGoal(selectedGoalId, parsed, selectedPerson, selectedAccountId);
+          toast.success(`Aporte de ${formatCurrency(parsed, 'DOP')} guardado en meta`);
+          onClose();
+          return;
+        }
+      }
+
+      if (isEditing && initialTransaction) {
+        await updateTransaction(initialTransaction.id, {
+          type,
+          amount: parsed,
+          user_name: selectedPerson,
+          owner,
+          category_id: selectedCategoryId || undefined,
+          account_id: selectedAccountId || undefined,
+          description: description.trim() || undefined,
+          date,
+        });
+        toast.success('Movimiento actualizado');
+      } else {
+        await addTransaction({
+          household_id: 'hh-joel-kat-01',
+          type,
+          amount: parsed,
+          user_name: selectedPerson,
+          owner,
+          category_id: selectedCategoryId || undefined,
+          account_id: selectedAccountId || undefined,
+          description: description.trim() || undefined,
+          date,
+        });
+        toast.success('Movimiento registrado con éxito');
+      }
       onClose();
-      return;
+    } catch (err: any) {
+      toast.error('Error al guardar: ' + (err?.message || 'Error desconocido'));
+    } finally {
+      setIsSubmitting(false);
     }
-
-    if (type === 'transfer') {
-      if (selectedAccountId === destinationAccountId) {
-        toast.show('Selecciona dos cuentas diferentes para la transferencia.', { type: 'danger' });
-        return;
-      }
-      transferBetweenAccounts(
-        selectedAccountId,
-        destinationAccountId,
-        numAmount,
-        selectedPerson,
-        description || 'Transferencia familiar'
-      );
-      toast.success('✓ Transferencia realizada');
-    } else {
-      addTransaction({
-        household_id: 'hh-joel-kat-01',
-        user_name: selectedPerson,
-        type,
-        amount: numAmount,
-        category_id: selectedCategoryId,
-        account_id: selectedAccountId,
-        date,
-        description: description.trim() || undefined,
-        payment_method: paymentMethod,
-        is_recurring: isRecurring,
-        frequency: isRecurring ? frequency : undefined,
-        receipt_url: receiptImage || undefined,
-      });
-      toast.success(type === 'income' ? '✓ Ingreso registrado' : '✓ Gasto registrado');
-    }
-
-    // Reset y cerrar
-    setAmount('');
-    setDescription('');
-    setReceiptImage(null);
-    onClose();
   };
+
+  const currentCategories = categories.filter((c) =>
+    type === 'income' ? c.type === 'income' : c.type === 'expense'
+  );
 
   return (
-    <View style={styles.modalOverlay}>
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.keyboardAvoidContainer}
+        style={styles.modalOverlay}
       >
-        <View style={[styles.container, { backgroundColor: theme.surfaceCard }]}>
-          {/* Header con pestañas de tipo */}
-          <View style={styles.header}>
-            <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
+        <View
+          style={[
+            styles.modalContent,
+            Platform.OS === 'web' ? ({
+              backdropFilter: 'blur(25px)',
+              WebkitBackdropFilter: 'blur(25px)',
+            } as any) : null,
+          ]}
+        >
+          {/* Header con botón cerrar */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>
               {isEditing ? 'Editar Movimiento' : 'Nuevo Movimiento'}
             </Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close-circle" size={26} color={theme.textMuted} />
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn} activeOpacity={0.7}>
+              <Ionicons name="close" size={20} color={Colors.ivoryWhite} />
             </TouchableOpacity>
           </View>
 
-          {/* Selector de Tipo (Gasto / Ingreso / Transferencia) */}
-          <View style={[styles.typeTabsRow, { backgroundColor: theme.surfaceCardAlt }]}>
-            <TouchableOpacity
-              onPress={() => handleTypeChange('expense')}
-              style={[styles.typeTab, type === 'expense' && styles.typeTabExpenseActive]}
-            >
-              <Ionicons
-                name="arrow-down-circle"
-                size={16}
-                color={type === 'expense' ? '#FFFFFF' : theme.textSecondary}
-                style={{ marginRight: 4 }}
-              />
-              <Text
-                style={[
-                  styles.typeTabText,
-                  { color: type === 'expense' ? '#FFFFFF' : theme.textSecondary },
-                ]}
-              >
-                Gasto
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handleTypeChange('income')}
-              style={[styles.typeTab, type === 'income' && styles.typeTabIncomeActive]}
-            >
-              <Ionicons
-                name="arrow-up-circle"
-                size={16}
-                color={type === 'income' ? '#FFFFFF' : theme.textSecondary}
-                style={{ marginRight: 4 }}
-              />
-              <Text
-                style={[
-                  styles.typeTabText,
-                  { color: type === 'income' ? '#FFFFFF' : theme.textSecondary },
-                ]}
-              >
-                Ingreso
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => handleTypeChange('transfer')}
-              style={[styles.typeTab, type === 'transfer' && styles.typeTabTransferActive]}
-            >
-              <Ionicons
-                name="swap-horizontal"
-                size={16}
-                color={type === 'transfer' ? '#FFFFFF' : theme.textSecondary}
-                style={{ marginRight: 4 }}
-              />
-              <Text
-                style={[
-                  styles.typeTabText,
-                  { color: type === 'transfer' ? '#FFFFFF' : theme.textSecondary },
-                ]}
-              >
-                Transferir
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView
-            style={styles.scrollBody}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-            keyboardShouldPersistTaps="handled"
-          >
-            {/* Monto con RD$ y chips rápidos */}
-            <JKAmountInput
-              amount={amount}
-              onChangeAmount={setAmount}
-              currencyPrefix={currency === 'DOP' ? 'RD$' : currency}
-            />
-
-          {/* Selector de Persona: Joel o Kat */}
-          <View style={styles.sectionBlock}>
-            <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-              {type === 'expense' ? '¿Quién realizó el gasto?' : '¿A nombre de quién?'}
-            </Text>
-            <View style={styles.personRow}>
-              {(['Joel', 'Kath'] as FamilyMemberName[]).map((person) => {
-                const isSelected = selectedPerson === person || (person === 'Kath' && selectedPerson === 'Kat');
-                const isKath = person === 'Kath';
-                const activeBg = isKath ? KathColors.primary : BrandColors.deepBlue;
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollBody}>
+            {/* 1. Selector de Tipo (5 opciones) */}
+            <View style={styles.typeSelectorRow}>
+              {[
+                { id: 'expense', label: '− Gasto', color: Colors.expense },
+                { id: 'income', label: '+ Ingreso', color: Colors.income },
+                { id: 'transfer', label: '↔ Transfer', color: Colors.transfer },
+                { id: 'savings', label: '◎ Ahorro', color: Colors.savings },
+                { id: 'debt', label: '▣ Deuda', color: Colors.debt },
+              ].map((t) => {
+                const isSelected = type === t.id;
                 return (
                   <TouchableOpacity
-                    key={person}
-                    onPress={() => setSelectedPerson(person)}
+                    key={t.id}
+                    activeOpacity={0.8}
+                    onPress={() => setType(t.id as TransactionType)}
                     style={[
-                      styles.personCard,
-                      {
-                        backgroundColor: isSelected ? activeBg : theme.surface,
-                        borderColor: isSelected ? activeBg : theme.border,
-                      },
-                    ]}
-                  >
-                    <JKAvatar name={person} size={28} />
-                    <Text
-                      style={[
-                        styles.personName,
-                        { color: isSelected ? '#FFFFFF' : theme.textPrimary },
-                      ]}
-                    >
-                      {person}
-                    </Text>
-                    {isSelected && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={16}
-                        color={isKath ? KathColors.light : BrandColors.skyBlue}
-                        style={{ marginLeft: 6 }}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-
-          {/* Categoría (solo si no es transferencia) */}
-          {type !== 'transfer' && (
-            <View style={styles.sectionBlock}>
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>Categoría</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
-                {relevantCategories.map((cat) => {
-                  const isSelected = selectedCategoryId === cat.id;
-                  return (
-                    <TouchableOpacity
-                      key={cat.id}
-                      onPress={() => setSelectedCategoryId(cat.id)}
-                      style={[
-                        styles.catChip,
-                        {
-                          backgroundColor: isSelected ? cat.color : theme.surface,
-                          borderColor: isSelected ? cat.color : theme.border,
-                        },
-                      ]}
-                    >
-                      <Ionicons
-                        name={(cat.icon as any) || 'tag'}
-                        size={14}
-                        color={isSelected ? '#FFFFFF' : cat.color}
-                        style={{ marginRight: 4 }}
-                      />
-                      <Text
-                        style={[
-                          styles.catChipText,
-                          { color: isSelected ? '#FFFFFF' : theme.textPrimary },
-                        ]}
-                      >
-                        {cat.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Cuenta origen / destino */}
-          <View style={styles.sectionBlock}>
-            <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-              {type === 'transfer' ? 'Cuenta Origen (de dónde sale)' : 'Cuenta'}
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.accountScroll}>
-              {accounts.map((acc) => {
-                const isSelected = selectedAccountId === acc.id;
-                return (
-                  <TouchableOpacity
-                    key={acc.id}
-                    onPress={() => setSelectedAccountId(acc.id)}
-                    style={[
-                      styles.accountChip,
-                      {
-                        backgroundColor: isSelected ? BrandColors.nightBlue : theme.surface,
-                        borderColor: isSelected ? BrandColors.nightBlue : theme.border,
+                      styles.typeChip,
+                      isSelected && {
+                        backgroundColor: t.color,
+                        borderColor: t.color,
                       },
                     ]}
                   >
                     <Text
                       style={[
-                        styles.accountChipText,
-                        { color: isSelected ? '#FFFFFF' : theme.textPrimary },
+                        styles.typeChipText,
+                        isSelected && { color: Colors.darkNavy, fontWeight: '800' },
                       ]}
                     >
-                      {acc.name}
+                      {t.label}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
-            </ScrollView>
-          </View>
+            </View>
 
-          {type === 'transfer' && (
-            <View style={styles.sectionBlock}>
-              <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-                Cuenta Destino (hacia dónde va)
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.accountScroll}>
-                {accounts.map((acc) => {
-                  const isSelected = destinationAccountId === acc.id;
-                  return (
-                    <TouchableOpacity
-                      key={acc.id}
-                      onPress={() => setDestinationAccountId(acc.id)}
-                      style={[
-                        styles.accountChip,
-                        {
-                          backgroundColor: isSelected ? BrandColors.deepBlue : theme.surface,
-                          borderColor: isSelected ? BrandColors.deepBlue : theme.border,
-                        },
-                      ]}
-                    >
-                      <Text
+            {/* 2. Campo de Monto Principal */}
+            <View style={styles.amountContainer}>
+              <Text style={styles.amountCurrencyPrefix}>RD$</Text>
+              <TextInput
+                style={styles.amountInput}
+                placeholder="0.00"
+                placeholderTextColor="rgba(248, 245, 236, 0.35)"
+                keyboardType="decimal-pad"
+                value={amount}
+                onChangeText={setAmount}
+                autoFocus={!isEditing}
+              />
+            </View>
+
+            {/* 3. Selección de Meta si es Ahorro */}
+            {type === 'savings' && savingGoals.length > 0 ? (
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>META DE AHORRO</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalChips}>
+                  {savingGoals.map((g) => {
+                    const isSelected = selectedGoalId === g.id;
+                    return (
+                      <TouchableOpacity
+                        key={g.id}
+                        activeOpacity={0.8}
+                        onPress={() => setSelectedGoalId(g.id)}
                         style={[
-                          styles.accountChipText,
-                          { color: isSelected ? '#FFFFFF' : theme.textPrimary },
+                          styles.categoryChip,
+                          isSelected && styles.categoryChipActive,
                         ]}
                       >
-                        {acc.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Descripción opcional */}
-          <JKInput
-            label="Descripción o concepto (opcional)"
-            placeholder="Ej: Compra supermercado, Cena..."
-            value={description}
-            onChangeText={setDescription}
-          />
-
-          {/* Foto de Recibo opcional */}
-          <View style={styles.sectionBlock}>
-            <Text style={[styles.sectionLabel, { color: theme.textSecondary }]}>
-              Foto del Recibo (opcional)
-            </Text>
-            {receiptImage ? (
-              <View style={styles.receiptPreviewContainer}>
-                <Image source={{ uri: receiptImage }} style={styles.receiptThumb} />
-                <TouchableOpacity
-                  onPress={() => setReceiptImage(null)}
-                  style={styles.removeReceiptBtn}
-                >
-                  <Ionicons name="trash" size={16} color="#FFFFFF" />
-                  <Text style={styles.removeReceiptText}>Quitar</Text>
-                </TouchableOpacity>
+                        <Ionicons
+                          name={(g.icon as any) || 'flag'}
+                          size={14}
+                          color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                          {g.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               </View>
-            ) : (
-              <TouchableOpacity
-                onPress={handlePickReceipt}
-                style={[styles.addReceiptBtn, { borderColor: theme.border }]}
-              >
-                <Ionicons name="camera-outline" size={20} color={BrandColors.deepBlue} />
-                <Text style={[styles.addReceiptText, { color: BrandColors.deepBlue }]}>
-                  Adjuntar foto de recibo
-                </Text>
-              </TouchableOpacity>
+            ) : null}
+
+            {/* 4. Categoría (para Gasto, Ingreso o Deuda) */}
+            {type !== 'transfer' && (
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>CATEGORÍA</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalChips}>
+                  {currentCategories.map((c) => {
+                    const isSelected = selectedCategoryId === c.id;
+                    return (
+                      <TouchableOpacity
+                        key={c.id}
+                        activeOpacity={0.8}
+                        onPress={() => setSelectedCategoryId(c.id)}
+                        style={[
+                          styles.categoryChip,
+                          isSelected && styles.categoryChipActive,
+                        ]}
+                      >
+                        <Ionicons
+                          name={(c.icon as any) || 'pricetag'}
+                          size={14}
+                          color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                          style={{ marginRight: 6 }}
+                        />
+                        <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                          {c.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
             )}
-          </View>
 
-          {/* Movimiento Recurrente */}
-          <View style={[styles.recurringRow, { borderColor: theme.border }]}>
-            <View>
-              <Text style={[styles.recurringTitle, { color: theme.textPrimary }]}>
-                Movimiento Recurrente
-              </Text>
-              <Text style={[styles.recurringSub, { color: theme.textMuted }]}>
-                {isRecurring ? `Se repetirá de forma ${frequency}` : 'No repetitivo'}
-              </Text>
+            {/* 5. Responsable: Joel / Kath / Compartido */}
+            <View style={styles.sectionBlock}>
+              <Text style={styles.sectionLabel}>RESPONSABLE</Text>
+              <View style={styles.personRow}>
+                {[
+                  { id: 'Joel', label: 'Joel', icon: 'person' },
+                  { id: 'Kath', label: 'Kath', icon: 'sparkles' },
+                  { id: 'Compartido', label: 'Compartido', icon: 'people' },
+                ].map((p) => {
+                  const isSelected = selectedPerson === p.id;
+                  return (
+                    <TouchableOpacity
+                      key={p.id}
+                      activeOpacity={0.8}
+                      onPress={() => setSelectedPerson(p.id as FamilyMemberName)}
+                      style={[
+                        styles.personChip,
+                        isSelected && styles.personChipActive,
+                      ]}
+                    >
+                      <Ionicons
+                        name={p.icon as any}
+                        size={14}
+                        color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                        style={{ marginRight: 6 }}
+                      />
+                      <Text style={[styles.personChipText, isSelected && styles.personChipTextActive]}>
+                        {p.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-            <Switch
-              value={isRecurring}
-              onValueChange={setIsRecurring}
-              trackColor={{ false: '#CBD5E1', true: BrandColors.deepBlue }}
-              thumbColor="#FFFFFF"
-            />
-          </View>
 
-          {isRecurring && (
-            <View style={styles.freqRow}>
-              {(['semanal', 'quincenal', 'mensual', 'anual'] as RecurrenceFrequency[]).map((f) => (
-                <TouchableOpacity
-                  key={f}
-                  onPress={() => setFrequency(f)}
-                  style={[
-                    styles.freqChip,
-                    {
-                      backgroundColor: frequency === f ? BrandColors.deepBlue : theme.surface,
-                      borderColor: frequency === f ? BrandColors.deepBlue : theme.border,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.freqText,
-                      { color: frequency === f ? '#FFFFFF' : theme.textPrimary },
-                    ]}
-                  >
-                    {f}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            {/* 6. Fecha y Cuenta */}
+            <View style={styles.twoColsRow}>
+              {/* Fecha */}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sectionLabel}>FECHA</Text>
+                <View style={styles.inputBox}>
+                  <Ionicons name="calendar-outline" size={16} color={Colors.secondaryGreen} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={styles.textInputSmall}
+                    value={date}
+                    onChangeText={setDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="rgba(248, 245, 236, 0.4)"
+                  />
+                </View>
+              </View>
+
+              {/* Cuenta Origen */}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.sectionLabel}>CUENTA</Text>
+                <View style={styles.inputBox}>
+                  <Ionicons name="card-outline" size={16} color={Colors.secondaryGreen} style={{ marginRight: 8 }} />
+                  <TextInput
+                    style={styles.textInputSmall}
+                    value={accounts.find((a) => a.id === selectedAccountId)?.name || 'Cuenta'}
+                    editable={false}
+                  />
+                </View>
+              </View>
             </View>
-          )}
 
-          {/* Botón Guardar */}
-          <JKButton
-            title={
-              isEditing
-                ? 'Guardar Cambios'
-                : type === 'income'
-                ? '+ Registrar Ingreso'
-                : type === 'transfer'
-                ? 'Realizar Transferencia'
-                : '+ Registrar Gasto'
-            }
-            onPress={handleSave}
-            variant="primary"
-            size="lg"
-            style={{ marginTop: Spacing.lg, marginBottom: isEditing ? Spacing.sm : Spacing.xl }}
-          />
+            {/* Cuenta Destino (Solo si es Transferencia) */}
+            {type === 'transfer' ? (
+              <View style={styles.sectionBlock}>
+                <Text style={styles.sectionLabel}>CUENTA DESTINO</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalChips}>
+                  {accounts
+                    .filter((a) => a.id !== selectedAccountId)
+                    .map((a) => {
+                      const isSelected = destinationAccountId === a.id;
+                      return (
+                        <TouchableOpacity
+                          key={a.id}
+                          activeOpacity={0.8}
+                          onPress={() => setDestinationAccountId(a.id)}
+                          style={[
+                            styles.categoryChip,
+                            isSelected && styles.categoryChipActive,
+                          ]}
+                        >
+                          <Ionicons
+                            name="arrow-forward-circle-outline"
+                            size={14}
+                            color={isSelected ? Colors.darkNavy : Colors.ivoryWhite}
+                            style={{ marginRight: 6 }}
+                          />
+                          <Text style={[styles.categoryChipText, isSelected && styles.categoryChipTextActive]}>
+                            {a.name}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                </ScrollView>
+              </View>
+            ) : null}
 
-          {isEditing && (
+            {/* 7. Descripción Opcional */}
+            <View style={styles.sectionBlock}>
+              <Text style={styles.sectionLabel}>DESCRIPCIÓN (OPCIONAL)</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  style={styles.textInputFull}
+                  placeholder="Ej. Supermercado Nacional, Cena familiar..."
+                  placeholderTextColor="rgba(248, 245, 236, 0.4)"
+                  value={description}
+                  onChangeText={setDescription}
+                />
+              </View>
+            </View>
+
+            {/* 8. Botón Guardar */}
             <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={handleDeleteTransaction}
-              style={styles.deleteModalBtn}
+              activeOpacity={0.85}
+              onPress={handleSubmit}
+              disabled={isSubmitting}
+              style={styles.saveBtn}
             >
-              <Ionicons name="trash-outline" size={16} color={BrandColors.danger} style={{ marginRight: 6 }} />
-              <Text style={styles.deleteModalBtnText}>Eliminar este movimiento</Text>
+              <Ionicons name="checkmark-circle-outline" size={20} color={Colors.darkNavy} style={{ marginRight: 8 }} />
+              <Text style={styles.saveBtnText}>
+                {isSubmitting ? 'Guardando...' : isEditing ? 'Guardar Cambios' : 'Registrar Movimiento'}
+              </Text>
             </TouchableOpacity>
-          )}
-        </ScrollView>
-      </View>
-    </KeyboardAvoidingView>
-  </View>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
 
 const styles = StyleSheet.create({
   modalOverlay: {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 29, 57, 0.7)',
-    justifyContent: 'flex-end',
-    zIndex: 999,
-  },
-  keyboardAvoidContainer: {
-    width: '100%',
-    maxHeight: '94%',
+    flex: 1,
+    backgroundColor: 'rgba(7, 24, 39, 0.82)',
     justifyContent: 'flex-end',
   },
-  container: {
-    borderTopLeftRadius: BorderRadius.xl,
-    borderTopRightRadius: BorderRadius.xl,
-    paddingHorizontal: Spacing.lg,
-    paddingTop: Spacing.md,
-    paddingBottom: Spacing.xl,
-    maxHeight: '90%',
+  modalContent: {
+    backgroundColor: 'rgba(16, 42, 67, 0.95)',
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    maxHeight: '88%',
+    paddingBottom: Platform.OS === 'ios' ? 36 : 24,
   },
-  header: {
+  modalHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.lg,
+    paddingBottom: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.08)',
   },
-  headerTitle: {
+  modalTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
+    color: Colors.ivoryWhite,
+    letterSpacing: -0.3,
   },
   closeBtn: {
-    padding: 4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  typeTabsRow: {
+  scrollBody: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+  },
+  typeSelectorRow: {
     flexDirection: 'row',
-    borderRadius: BorderRadius.md,
-    padding: 3,
-    marginBottom: Spacing.sm,
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
   },
-  typeTab: {
-    flex: 1,
+  typeChip: {
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    borderRadius: Radius.pill,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  typeChipText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: Colors.ivoryWhite,
+  },
+  amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 8,
-    borderRadius: BorderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: Radius.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.14)',
+    marginBottom: 18,
   },
-  typeTabExpenseActive: {
-    backgroundColor: BrandColors.nightBlue,
+  amountCurrencyPrefix: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: Colors.secondaryGreen,
+    marginRight: 8,
   },
-  typeTabIncomeActive: {
-    backgroundColor: BrandColors.success,
-  },
-  typeTabTransferActive: {
-    backgroundColor: BrandColors.deepBlue,
-  },
-  typeTabText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  scrollBody: {
-    width: '100%',
+  amountInput: {
+    fontSize: 34,
+    fontWeight: '800',
+    color: Colors.ivoryWhite,
+    flex: 1,
   },
   sectionBlock: {
-    marginVertical: Spacing.xs + 2,
+    marginBottom: 16,
   },
   sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: Colors.ivoryTranslucent,
+    letterSpacing: 0.8,
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  horizontalChips: {
+    flexDirection: 'row',
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: Radius.pill,
+    paddingVertical: 7,
+    paddingHorizontal: 13,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+  },
+  categoryChipActive: {
+    backgroundColor: Colors.secondaryGreen,
+    borderColor: Colors.secondaryGreen,
+  },
+  categoryChipText: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 6,
+    color: Colors.ivoryWhite,
+  },
+  categoryChipTextActive: {
+    color: Colors.darkNavy,
+    fontWeight: '800',
   },
   personRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
-  personCard: {
+  personChip: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1.5,
-  },
-  personName: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  catScroll: {
-    flexDirection: 'row',
-  },
-  catChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: BorderRadius.pill,
-    borderWidth: 1,
-    marginRight: 8,
-  },
-  catChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  accountScroll: {
-    flexDirection: 'row',
-  },
-  accountChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    marginRight: 8,
-  },
-  accountChipText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  addReceiptBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: BorderRadius.md,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    borderRadius: Radius.md,
+    paddingVertical: 10,
     borderWidth: 1,
-    borderStyle: 'dashed',
-    gap: 8,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  addReceiptText: {
+  personChipActive: {
+    backgroundColor: Colors.secondaryGreen,
+    borderColor: Colors.secondaryGreen,
+  },
+  personChipText: {
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
+    color: Colors.ivoryWhite,
   },
-  receiptPreviewContainer: {
+  personChipTextActive: {
+    color: Colors.darkNavy,
+    fontWeight: '800',
+  },
+  twoColsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
+    marginBottom: 16,
   },
-  receiptThumb: {
-    width: 60,
-    height: 60,
-    borderRadius: BorderRadius.sm,
-  },
-  removeReceiptBtn: {
+  inputBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: BrandColors.danger,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.sm,
-    gap: 4,
-  },
-  removeReceiptText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  recurringRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderTopWidth: 1,
-    marginTop: Spacing.sm,
-  },
-  recurringTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  recurringSub: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  freqRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: Spacing.xs,
-  },
-  freqChip: {
-    flex: 1,
-    paddingVertical: 6,
-    alignItems: 'center',
-    borderRadius: BorderRadius.sm,
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: Radius.md,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  freqText: {
-    fontSize: 11,
+  textInputSmall: {
+    fontSize: 13,
+    color: Colors.ivoryWhite,
     fontWeight: '600',
-    textTransform: 'capitalize',
+    flex: 1,
   },
-  scrollContent: {
-    paddingBottom: 40,
+  textInputFull: {
+    fontSize: 13,
+    color: Colors.ivoryWhite,
+    fontWeight: '500',
+    flex: 1,
   },
-  deleteModalBtn: {
+  saveBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    borderRadius: BorderRadius.md,
-    backgroundColor: `${BrandColors.danger}14`,
-    marginBottom: Spacing.xl,
-    borderWidth: 1,
-    borderColor: `${BrandColors.danger}30`,
+    backgroundColor: Colors.secondaryGreen,
+    borderRadius: Radius.md,
+    paddingVertical: 14,
+    marginTop: 8,
+    shadowColor: Colors.secondaryGreen,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  deleteModalBtnText: {
-    color: BrandColors.danger,
-    fontSize: 14,
-    fontWeight: '700',
+  saveBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: Colors.darkNavy,
+    letterSpacing: 0.2,
   },
 });
